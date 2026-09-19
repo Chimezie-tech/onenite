@@ -31,6 +31,12 @@ export const PLANS: Record<PlanId, { stars: number; days: number }> = {
   yearly:  { stars: 1200, days: 365 },
 };
 
+// --- Ads ---
+export const AD_ROTATION_MS = 6000;
+export const CURRENCY_SYMBOLS: Record<string, string> = {
+  NGN: "₦", GHS: "₵", KES: "KSh", USD: "$",
+};
+
 // --- Curated interest tags (African market) ---
 export const INTEREST_TAGS = [
   "Afrobeats", "Amapiano", "Football", "Cooking", "Travel", "Fashion",

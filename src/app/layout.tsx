@@ -4,6 +4,8 @@ import Script from "next/script";
 import "./globals.css";
 import ThemeProvider from "@/components/layout/ThemeProvider";
 import AuthGuard from "@/components/layout/AuthGuard";
+import NavGate from "@/components/layout/NavGate";
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} min-h-screen`}>
         <ThemeProvider>
           <AuthGuard>{children}</AuthGuard>
+          <NavGate />
         </ThemeProvider>
       </body>
     </html>
