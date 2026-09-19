@@ -2,6 +2,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
+import { FREE_DAILY_LIKES } from "@/lib/utils/constants";
 
 interface Props {
   open: boolean;
@@ -26,9 +27,9 @@ export default function PaywallModal({ open, onClose }: Props) {
             className="w-full max-w-sm rounded-2xl border border-line bg-surface p-6 text-center"
           >
             <Sparkles className="mx-auto h-8 w-8 text-pink-500" />
-            <p className="mt-2 text-xl font-bold text-ink">Out of likes for today 😅</p>
+            <p className="mt-2 text-xl font-bold text-ink">Out of likes for today</p>
             <p className="mt-1 text-sm text-muted">
-              Free members get 15 likes per day. Go Premium for unlimited likes,
+              Free members get {FREE_DAILY_LIKES} likes per day. Go Premium for unlimited likes,
               5 super likes daily, and more.
             </p>
             <button
