@@ -23,6 +23,7 @@ interface TelegramInitDataUnsafe {
   auth_date?: number;
   hash?: string;
   query_id?: string;
+  start_param?: string;
 }
 
 interface TelegramHapticFeedback {

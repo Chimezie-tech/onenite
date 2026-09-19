@@ -4,7 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import { getToken, getStoredProfile, clearSession, getSupabase, loginWithTelegram } from "@/lib/supabase/client";
-import { getInitData, expandApp } from "@/lib/telegram/sdk";
+import { getInitData, expandApp, getTelegramWebApp } from "@/lib/telegram/sdk";
 import type { Profile } from "@/types";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -16,10 +16,17 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     expandApp();
 
-    function routeFor(user: Profile) {
+       function routeFor(user: Profile) {
       if (!user.onboarding_completed && pathname !== "/onboarding") {
         router.replace("/onboarding");
-      } else if (user.onboarding_completed && pathname === "/onboarding") {
+        return;
+      }
+      const startParam = getTelegramWebApp()?.initDataUnsafe?.start_param;
+      if (startParam === "admin") {
+        router.replace("/admin");
+        return;
+      }
+      if (user.onboarding_completed && pathname === "/onboarding") {
         router.replace("/");
       }
     }
