@@ -1,13 +1,21 @@
-import { MapPin } from "lucide-react";
+import { Info, MapPin } from "lucide-react";
 import { truncate } from "@/lib/utils/helpers";
 import type { ProfileWithPhotos } from "@/types";
 
-export default function SwipeCard({ profile }: { profile: ProfileWithPhotos }) {
+interface Props {
+  profile: ProfileWithPhotos;
+  onOpen: () => void;
+}
+
+export default function SwipeCard({ profile, onOpen }: Props) {
   const photo =
     profile.profile_photos.find((p) => p.is_primary) ?? profile.profile_photos[0];
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-2xl border border-line bg-surface">
+    <div
+      className="relative h-full w-full cursor-pointer overflow-hidden rounded-2xl border border-line bg-surface"
+      onClick={onOpen}
+    >
       {photo && (
         <img
           src={photo.photo_url}
@@ -16,6 +24,9 @@ export default function SwipeCard({ profile }: { profile: ProfileWithPhotos }) {
           className="h-full w-full select-none object-cover"
         />
       )}
+      <span className="absolute right-3 top-3 rounded-full bg-black/40 p-1.5 text-white">
+        <Info className="h-4 w-4" />
+      </span>
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4 pt-16">
         <p className="text-xl font-bold text-white">
           {profile.first_name}, {profile.age}

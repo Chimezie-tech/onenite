@@ -11,6 +11,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { useDeck } from "@/hooks/useDeck";
 import { getSupabase } from "@/lib/supabase/client";
 import { haptic } from "@/lib/telegram/sdk";
+import ProfileDetail from "@/components/swipe/ProfileDetail";
 import {
   FREE_DAILY_LIKES,
   FREE_DAILY_SUPER_LIKES,
@@ -32,6 +33,7 @@ export default function Home() {
   const [matchWith, setMatchWith] = useState<ProfileWithPhotos | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [notice, setNotice] = useState("");
+  const [detail, setDetail] = useState<ProfileWithPhotos | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -149,10 +151,22 @@ export default function Home() {
         onAction={handleAction}
         onGone={removeCard}
         onRefresh={reload}
+        onOpen={setDetail}
       />
 
       <MatchModal match={matchWith} myPhotoUrl={myPhotoUrl} onClose={() => setMatchWith(null)} />
       <PaywallModal open={showPaywall} onClose={() => setShowPaywall(false)} />
+      <ProfileDetail
+        profile={detail}
+        onClose={() => setDetail(null)}
+        onAction={(action) => {
+          if (!detail) return;
+          const target = detail;
+          setDetail(null);
+          removeCard(target.id);
+          void handleAction(target, action);
+        }}
+      />
     </main>
   );
 }

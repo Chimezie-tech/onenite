@@ -21,9 +21,10 @@ interface Props {
   onAction: (target: ProfileWithPhotos, action: SwipeAction) => void;
   onGone: (id: string) => void;
   onRefresh: () => void;
+  onOpen: (profile: ProfileWithPhotos) => void;
 }
 
-export default function SwipeDeck({ deck, loading, onAction, onGone, onRefresh }: Props) {
+export default function SwipeDeck({ deck, loading, onAction, onGone, onRefresh, onOpen }: Props) {
   const refs = useRef<Record<string, Swipeable | null>>({});
   const visible = deck.slice(0, 3);
 
@@ -65,7 +66,7 @@ export default function SwipeDeck({ deck, loading, onAction, onGone, onRefresh }
             onSwipe={(dir) => onAction(profile, DIR_TO_ACTION[dir as Dir])}
             onCardLeftScreen={() => onGone(profile.id)}
           >
-            <SwipeCard profile={profile} />
+          <SwipeCard profile={profile} onOpen={() => onOpen(profile)} />
           </TinderCard>
         ))}
       </div>
