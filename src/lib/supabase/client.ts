@@ -54,6 +54,10 @@ export function getSupabase(): SupabaseClient {
       global: token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
     }
   );
+    if (token) {
+    // Realtime (chat) subscriptions need the user token for RLS filtering
+    cachedClient.realtime.setAuth(token);
+  }
   return cachedClient;
 }
 
