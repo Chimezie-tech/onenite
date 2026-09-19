@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
-import { Star, Trash2 } from "lucide-react";
-import { getSupabase } from "@/lib/supabase/client";
+import { Star, Trash, RefreshCw, Trash2 } from "lucide-react";
+import { getSupabase,  getToken } from "@/lib/supabase/client";
 import type { ProfilePhoto } from "@/types";
+
 
 interface Props {
   photos: ProfilePhoto[];
@@ -19,6 +20,22 @@ export default function PhotoGrid({ photos, onChange }: Props) {
     }
     await getSupabase().from("profile_photos").update({ is_primary: true }).eq("id", photo.id);
     onChange(photos.map((p) => ({ ...p, is_primary: p.id === photo.id })));
+    setBusyId("");
+  }
+
+    async function recheck(photo: ProfilePhoto) {
+    setBusyId(photo.id);
+    await fetch("/api/moderate/photo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken() ?? ""}`,
+      },
+      body: JSON.stringify({ photoId: photo.id }),
+    });
+    const { data } = await getSupabase()
+      .from("profile_photos").select("*").eq("id", photo.id).maybeSingle();
+    if (data) onChange(photos.map((p) => (p.id === photo.id ? (data as ProfilePhoto) : p)));
     setBusyId("");
   }
 
@@ -63,6 +80,18 @@ export default function PhotoGrid({ photos, onChange }: Props) {
           )}
 
           <div className="absolute right-1 top-1 flex gap-1">
+            {photo.moderation_status !== "approved" && (
+              <button
+                type="button"
+                aria-label="Re-check photo"
+                disabled={busyId === photo.id}
+                onClick={() => recheck(photo)}
+                className="rounded-full bg-black/60 p-1 text-white"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+              </button>
+            )}
+
             {!photo.is_primary && (
               <button
                 type="button"

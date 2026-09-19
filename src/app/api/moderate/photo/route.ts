@@ -27,12 +27,24 @@ export async function POST(req: Request) {
   if (photo.user_id !== sub) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const result = await moderatePhoto(photo.photo_url, photo.mime_type);
-  const status = result.safe ? "approved" : "rejected";
+
+  const status = result.serviceError
+    ? "pending"                                   // infra problem → keep retryable
+    : result.safe
+      ? "approved"
+      : "rejected";                               // AI verdict only
 
   await admin
     .from("profile_photos")
-    .update({ moderation_status: status, moderation_reason: result.reason })
+    .update({
+      moderation_status: status,
+      moderation_reason: result.serviceError ? null : result.reason,
+    })
     .eq("id", photoId);
 
-  return NextResponse.json({ status, reason: result.reason });
+  return NextResponse.json({
+    status,
+    reason: result.reason,
+    serviceError: result.serviceError,
+  });
 }
