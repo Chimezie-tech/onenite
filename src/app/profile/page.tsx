@@ -1,22 +1,35 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, ShieldAlert } from "lucide-react";
 import AdBanner from "@/components/ads/AdBanner";
 import { getToken } from "@/lib/supabase/client";
 
+type CheckState = "checking" | "admin" | "user" | "unconfigured";
+
 export default function ProfilePage() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [state, setState] = useState<CheckState>("checking");
 
   useEffect(() => {
+    let active = true;
     async function check() {
-      const res = await fetch("/api/admin/check", {
-        headers: { Authorization: `Bearer ${getToken() ?? ""}` },
-      });
-      const data = (await res.json()) as { isAdmin?: boolean };
-      setIsAdmin(Boolean(data.isAdmin));
+      try {
+        const res = await fetch("/api/admin/check", {
+          headers: { Authorization: `Bearer ${getToken() ?? ""}` },
+        });
+        const data = (await res.json()) as { isAdmin?: boolean; configured?: boolean };
+        if (!active) return;
+        if (!data.configured) setState("unconfigured");
+        else if (data.isAdmin) setState("admin");
+        else setState("user");
+      } catch {
+        if (active) setState("user");
+      }
     }
     check();
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (
@@ -24,13 +37,24 @@ export default function ProfilePage() {
       <p className="text-lg font-bold text-ink">My Profile 👤</p>
       <p className="text-sm text-muted">Profile editing & photos arrive in Phase 6.</p>
 
-      {isAdmin && (
+      {state === "checking" && (
+        <p className="text-xs text-muted">Checking admin rights…</p>
+      )}
+
+      {state === "admin" && (
         <Link
           href="/admin"
-          className="flex items-center justify-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm font-semibold text-pink-500"
+          className="flex items-center justify-center gap-2 rounded-xl bg-pink-500 p-3 text-sm font-bold text-white"
         >
-          <ShieldCheck className="h-4 w-4" /> Admin Console
+          <ShieldCheck className="h-4 w-4" /> Admin Dashboard
         </Link>
+      )}
+
+      {state === "unconfigured" && (
+        <p className="flex items-center gap-2 rounded-xl border border-line bg-surface p-3 text-xs text-muted">
+          <ShieldAlert className="h-4 w-4 shrink-0 text-amber-500" />
+          Admin IDs not configured on the server (ADMIN_TELEGRAM_IDS missing).
+        </p>
       )}
 
       <AdBanner placement="profile" />
