@@ -18,9 +18,11 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let active = true;
-    async function load() {
+       async function load() {
+      if (!profile) return;
       const { data } = await getSupabase()
         .from("profile_photos").select("*")
+        .eq("user_id", profile.id)            // ✅ only MY photos
         .order("created_at", { ascending: true });
       if (active) setPhotos((data ?? []) as ProfilePhoto[]);
     }
