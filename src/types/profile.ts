@@ -1,6 +1,13 @@
+import { ReactNode } from "react";
+
 export type Gender = "male" | "female" | "other";
 export type InterestedIn = "male" | "female" | "everyone";
 export type ModerationStatus = "pending" | "approved" | "rejected";
+export type SwipeAction = "like" | "pass" | "super";
+
+export interface ProfileWithPhotos extends Profile {
+  profile_photos: ProfilePhoto[];
+}
 
 export interface Profile {
   id: string;                  // uuid, primary key
@@ -27,6 +34,7 @@ export interface Profile {
 }
 
 export interface ProfilePhoto {
+  first_name: ReactNode;
   id: string;
   user_id: string;             // FK -> profiles.id
   photo_url: string;
