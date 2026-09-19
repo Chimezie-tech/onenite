@@ -21,6 +21,9 @@ export interface Profile {
   premium_expires_at: string | null;
   created_at: string;
   updated_at: string;
+  referrer_code: string | null;
+  onboarding_completed: boolean;
+  last_active_at: string;
 }
 
 export interface ProfilePhoto {
