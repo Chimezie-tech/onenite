@@ -1,3 +1,4 @@
+import { Profile } from "@/types/profile";
 import { createBrowserClient } from "@supabase/ssr"; // Wait, let's use the simpler standard client for mini apps
 import { createClient } from "@supabase/supabase-js";
 
@@ -14,9 +15,11 @@ export async function loginWithTelegram(initData: string) {
     body: JSON.stringify({ initData }),
   });
 
-  if (!res.ok) throw new Error("Authentication failed");
-  
-  const { token, profile } = await res.json();
+  const data: { token?: string; profile?: Profile; error?: string } = await res.json().catch(() => ({}));
+  if (!res.ok || !data.token || !data.profile) {
+    throw new Error(data.error ?? `Authentication failed (HTTP ${res.status})`);
+  }
+  const { token, profile } = data;
 
   // 2. Tell the Supabase client to use this JWT
   await supabase.auth.setSession({

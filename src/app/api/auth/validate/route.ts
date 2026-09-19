@@ -13,6 +13,19 @@ const supabaseAdmin = createClient(
 );
 
 export async function POST(req: Request) {
+
+      if (
+      !process.env.TELEGRAM_BOT_TOKEN ||
+      !process.env.SUPABASE_JWT_SECRET ||
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        { error: "Server misconfigured: missing environment variables on Vercel" },
+        { status: 500 }
+      );
+    }
+    
   try {
     const { initData } = await req.json();
     if (!initData) return NextResponse.json({ error: "No initData" }, { status: 400 });

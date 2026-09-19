@@ -46,7 +46,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           router.replace("/onboarding");
         }
       } catch (err) {
-        setError("Failed to authenticate. Please try again.");
+          setError(err instanceof Error ? err.message : "Failed to authenticate.");
       } finally {
         setLoading(false);
       }
