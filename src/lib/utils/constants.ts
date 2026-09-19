@@ -24,6 +24,10 @@ export const MESSAGE_MAX_LENGTH = 1000;
 // --- Safety ---
 export const AUTO_SUSPEND_REPORT_COUNT = 5;
 
+// --- Uploads ---
+export const MAX_UPLOAD_MB = 5;
+export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 // --- Premium pricing (Telegram Stars) ---
 export const PLANS: Record<PlanId, { stars: number; days: number }> = {
   weekly:  { stars: 50,   days: 7 },
