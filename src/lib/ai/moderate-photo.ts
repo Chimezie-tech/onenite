@@ -1,5 +1,6 @@
 const API_KEY = process.env.AI_STUDIO_API_KEY;
 const MODEL = process.env.AI_STUDIO_MODEL ?? "gemini-3.8-flash";
+
 export interface ModerationResult {
   safe: boolean;
   reason: string | null;
@@ -17,6 +18,38 @@ Reject (safe=false) if ANY of the following are true:
 Approve (safe=true) only for genuine photos showing a real person's face.
 Keep "reason" to max 8 words, or null when safe.`;
 
+const RETRYABLE = [429, 500, 503];
+const BACKOFF_MS = [1000, 2500, 5000];
+
+/** Calls Gemini, retrying transient capacity errors (free-tier 503s). */
+async function callGemini(body: unknown): Promise<Response> {
+  let attempt = 0;
+  for (;;) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": API_KEY!,
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (RETRYABLE.includes(res.status) && attempt < BACKOFF_MS.length) {
+      const wait = BACKOFF_MS[attempt];
+      attempt += 1;
+      console.warn(
+        `[moderation] Gemini ${res.status} — retry ${attempt}/${BACKOFF_MS.length} in ${wait}ms`
+      );
+      await new Promise((resolve) => setTimeout(resolve, wait));
+      continue;
+    }
+    return res;
+  }
+}
+
 export async function moderatePhoto(
   imageUrl: string,
   mimeType: string
@@ -25,7 +58,7 @@ export async function moderatePhoto(
     return { safe: false, reason: "Moderation unavailable", serviceError: true };
   }
 
-  // 1) Fetch image bytes server-side; Gemini receives inline base64 (no URL dependency)
+  // 1) Fetch image bytes server-side; Gemini receives inline base64
   let base64: string;
   try {
     const imgRes = await fetch(imageUrl);
@@ -37,32 +70,22 @@ export async function moderatePhoto(
     return { safe: false, reason: "Could not read image", serviceError: true };
   }
 
-  // 2) Ask Gemini
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": API_KEY,
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { text: PROMPT },
-              { inline_data: { mime_type: mimeType, data: base64 } },
-            ],
-          },
+  // 2) Ask Gemini (with retries)
+  const res = await callGemini({
+    contents: [
+      {
+        parts: [
+          { text: PROMPT },
+          { inline_data: { mime_type: mimeType, data: base64 } },
         ],
-        generationConfig: { responseMimeType: "application/json", temperature: 0 },
-      }),
-    }
-  );
+      },
+    ],
+    generationConfig: { responseMimeType: "application/json", temperature: 0 },
+  });
 
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.error(`[moderation] Gemini HTTP ${res.status}: ${body.slice(0, 500)}`);
+    const bodyText = await res.text().catch(() => "");
+    console.error(`[moderation] Gemini HTTP ${res.status}: ${bodyText.slice(0, 500)}`);
     return { safe: false, reason: "Moderation service error", serviceError: true };
   }
 
