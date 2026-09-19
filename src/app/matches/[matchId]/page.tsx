@@ -33,11 +33,21 @@ export default function ChatThreadPage() {
     let active = true;
     const client = getSupabase();
 
+    async function markRead() {
+      const { error } = await client
+        .from("messages")
+        .update({ read_at: new Date().toISOString() })
+        .eq("match_id", matchId)
+        .neq("sender_id", profile?.id ?? "")
+        .is("read_at", null);
+      if (error) console.error("[chat] mark-read failed:", error.message);
+    }
+
     async function init() {
       if (!profile) return;
       const { data: match } = await client
         .from("matches").select("*").eq("id", matchId).maybeSingle();
-      if (!match) { setReady(true); return; } // RLS hides matches you're not part of
+      if (!match) { setReady(true); return; }
 
       const otherId = match.user1_id === profile.id ? match.user2_id : match.user1_id;
       const { data: otherProfile } = await client
@@ -51,24 +61,22 @@ export default function ChatThreadPage() {
       setMessages((msgs ?? []) as Message[]);
       setReady(true);
 
-      // Mark everything they sent as read
-      void client
-        .from("messages")
-        .update({ read_at: new Date().toISOString() })
-        .eq("match_id", matchId)
-        .neq("sender_id", profile.id)
-        .is("read_at", null);
+      await markRead();
 
       channelRef.current = client
         .channel(`chat-${matchId}`)
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "messages", filter: `match_id=eq.${matchId}` },
-          (payload) => {
+          async (payload) => {
             const msg = payload.new as Message;
             setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
             if (msg.sender_id !== profile.id) {
-              void client.from("messages").update({ read_at: new Date().toISOString() }).eq("id", msg.id);
+              const { error } = await client
+                .from("messages")
+                .update({ read_at: new Date().toISOString() })
+                .eq("id", msg.id);
+              if (error) console.error("[chat] mark-read (live) failed:", error.message);
             }
           }
         )
@@ -92,8 +100,10 @@ export default function ChatThreadPage() {
     }
 
     void init();
+    window.addEventListener("focus", markRead);
     return () => {
       active = false;
+      window.removeEventListener("focus", markRead);
       if (channelRef.current) void client.removeChannel(channelRef.current);
     };
   }, [profile, matchId]);
@@ -118,7 +128,7 @@ export default function ChatThreadPage() {
 
   function notifyTyping() {
     const now = Date.now();
-    if (now - typingSentAt.current < 1200) return; // throttle broadcast spam
+    if (now - typingSentAt.current < 1200) return;
     typingSentAt.current = now;
     void channelRef.current?.send({
       type: "broadcast",
