@@ -6,6 +6,8 @@
  * global script, so these types are visible everywhere.
  */
 
+
+
 interface TelegramWebAppUser {
   id: number;
   first_name: string;
@@ -46,6 +48,8 @@ interface TelegramWebApp {
   disableClosing(): void;
   openLink(url: string): void;
   openTelegramLink(url: string): void;
+    onEvent(eventType: "themeChanged" | "viewportChanged" | "backButtonClicked", eventHandler: () => void): void;
+  offEvent(eventType: "themeChanged" | "viewportChanged" | "backButtonClicked", eventHandler: () => void): void;
   HapticFeedback: TelegramHapticFeedback;
 }
 

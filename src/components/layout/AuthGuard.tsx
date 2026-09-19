@@ -1,64 +1,73 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useUserStore } from "@/store/useUserStore";
-import { supabase, loginWithTelegram } from "@/lib/supabase/client";
-import { getInitData, expandApp } from "@/lib/telegram/sdk";
 import { Loader2 } from "lucide-react";
+import { useUserStore } from "@/store/useUserStore";
+import { getToken, getStoredProfile, clearSession, getSupabase, loginWithTelegram } from "@/lib/supabase/client";
+import { getInitData, expandApp } from "@/lib/telegram/sdk";
+import type { Profile } from "@/types";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { profile, setProfile, isLoading, setLoading } = useUserStore();
+  const { setProfile, isLoading, setLoading } = useUserStore();
   const router = useRouter();
   const pathname = usePathname();
   const [error, setError] = useState("");
 
   useEffect(() => {
-    expandApp(); // Make Telegram Mini App full screen
+    expandApp();
+
+    function routeFor(user: Profile) {
+      if (!user.onboarding_completed && pathname !== "/onboarding") {
+        router.replace("/onboarding");
+      } else if (user.onboarding_completed && pathname === "/onboarding") {
+        router.replace("/");
+      }
+    }
 
     async function initAuth() {
-      // 1. Check if already logged in (Supabase session exists)
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        // Fetch profile if we have a session but no profile in store
-        if (!profile) {
-           const { data } = await supabase.from("profiles").select("*").single();
-           if (data) setProfile(data);
+      // 1) Returning user: validate stored token against the DB
+      if (getToken()) {
+        const stored = getStoredProfile();
+        const { data, error: fetchError } = await getSupabase()
+          .from("profiles")
+          .select("*")
+          .eq("id", stored?.id ?? "")
+          .maybeSingle();
+        if (!fetchError && data) {
+          setProfile(data);
+          setLoading(false);
+          routeFor(data);
+          return;
         }
-        setLoading(false);
-        return;
+        clearSession(); // dead token → fall through to fresh Telegram login
       }
 
-      // 2. Not logged in. Try Telegram Login.
+      // 2) Fresh login via Telegram
       const initData = getInitData();
       if (!initData) {
         setError("Please open this app inside Telegram.");
         setLoading(false);
         return;
       }
-
       try {
-        const userProfile = await loginWithTelegram(initData);
-        setProfile(userProfile);
-        
-        // 3. Route based on onboarding status
-        if (!userProfile.onboarding_completed && pathname !== "/onboarding") {
-          router.replace("/onboarding");
-        }
+        const user = await loginWithTelegram(initData);
+        setProfile(user);
+        routeFor(user);
       } catch (err) {
-          setError(err instanceof Error ? err.message : "Failed to authenticate.");
+        setError(err instanceof Error ? err.message : "Failed to authenticate.");
       } finally {
         setLoading(false);
       }
     }
 
     initAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (isLoading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-black text-white">
-        <Loader2 className="animate-spin w-8 h-8" />
+      <div className="flex min-h-screen w-full items-center justify-center bg-app text-ink">
+        <Loader2 className="h-8 w-8 animate-spin" />
         <span className="ml-2">Loading OneNite...</span>
       </div>
     );
@@ -66,7 +75,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (error) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-black text-red-500 p-4 text-center">
+      <div className="flex min-h-screen w-full items-center justify-center bg-app p-4 text-center text-red-500">
         {error}
       </div>
     );
