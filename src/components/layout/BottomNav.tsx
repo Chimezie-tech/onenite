@@ -50,7 +50,7 @@ export default function BottomNav() {
               }`}
             >
               <span className="relative">
-                <Icon className=" h-[16px] w-[16]" />
+                <Icon className=" h-[18px] w-[18]" />
                 {count > 0 && (
                   <span className="absolute -right-2 -top-1 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-pink-500 px-1 text-[9px] font-bold text-white">
                     {badgeText(count)}
