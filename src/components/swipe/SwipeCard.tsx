@@ -24,8 +24,8 @@ export default function SwipeCard({ profile, onOpen }: Props) {
           className="h-full w-full select-none object-cover"
         />
       )}
-      <span className="absolute right-3 top-3 rounded-full bg-black/40 p-1.5 text-white">
-        <Info className="h-4 w-4" />
+      <span className="absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur">
+        View profile
       </span>
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4 pt-16">
         <p className="text-xl font-bold text-white">

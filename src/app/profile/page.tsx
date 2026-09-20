@@ -8,6 +8,7 @@ import PhotoUploader from "@/components/profile/PhotoUploader";
 import { getToken, getSupabase } from "@/lib/supabase/client";
 import { useUserStore } from "@/store/useUserStore";
 import type { ProfilePhoto } from "@/types";
+import { profileScore } from "@/lib/utils/profileScore";
 
 type CheckState = "checking" | "admin" | "user" | "unconfigured";
 
@@ -47,7 +48,10 @@ export default function ProfilePage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-4 pb-24">
-      <p className="text-lg font-bold text-ink">My Profile 👤</p>
+      <p className="text-lg font-bold text-ink">My Profile</p>
+        <p className="text-xs text-muted">
+        Profile strength: {profile ? profileScore(profile, photos.filter((p) => p.moderation_status === "approved").length) : 0}%
+      </p>
 
       <PhotoGrid photos={photos} onChange={setPhotos} />
       <PhotoUploader

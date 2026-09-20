@@ -42,29 +42,26 @@ export default function AdCarousel() {
   const ad = ads[index];
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-line bg-surface">
-      <img src={ad.image_url} alt={ad.title} className="h-40 w-full object-cover" />
-      <div className="flex items-center justify-between gap-2 p-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-ink">{ad.title}</p>
-          <p className="truncate text-xs text-muted">{ad.subtitle}</p>
+    <div>
+      <div className="flex items-center gap-3 rounded-xl border border-line bg-surface p-2">
+        <img src={ad.image_url} alt={ad.title} className="h-12 w-12 rounded-lg object-cover" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-semibold text-ink">{ad.title}</p>
+          <p className="truncate text-[11px] text-muted">{ad.subtitle}</p>
         </div>
         <button
           type="button"
           onClick={() => { trackAd(ad.id, "click"); openAdCta(ad, router); }}
-          className="shrink-0 rounded-lg bg-pink-500 px-3 py-1.5 text-xs font-bold text-white"
+          className="shrink-0 rounded-lg bg-pink-500 px-2.5 py-1.5 text-[11px] font-bold text-white"
         >
           {ad.cta_label}
         </button>
       </div>
       {ads.length > 1 && (
-        <div className="absolute bottom-1.5 left-1/2 flex -translate-x-1/2 gap-1">
+        <div className="mt-1 flex justify-center gap-1">
           {ads.map((a, i) => (
-            <button
-              key={a.id} type="button" aria-label={`Show ad ${i + 1}`}
-              onClick={() => setIndex(i)}
-              className={`h-1.5 rounded-full transition-all ${i === index ? "w-4 bg-pink-500" : "w-1.5 bg-muted"}`}
-            />
+            <button key={a.id} type="button" aria-label={`Show ad ${i + 1}`} onClick={() => setIndex(i)}
+              className={`h-1 rounded-full ${i === index ? "w-3 bg-pink-500" : "w-1 bg-muted"}`} />
           ))}
         </div>
       )}

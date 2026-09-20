@@ -77,9 +77,33 @@ export const CURRENCY_SYMBOLS: Record<string, string> = {
   NGN: "₦", GHS: "₵", KES: "KSh", USD: "$",
 };
 
-// --- Curated interest tags (African market) ---
-export const INTEREST_TAGS = [
-  "Afrobeats", "Amapiano", "Football", "Cooking", "Travel", "Fashion",
-  "Gospel", "Movies", "Fitness", "Tech", "Reading", "Comedy",
-  "Foodie", "Music", "Dancing", "Business", "Gaming", "Photography",
-] as const;
+// --- Onboarding v2: categorized profile attributes ---
+export interface ProfileCategory {
+  key:
+    | "orientation" | "relationship_status" | "drinking" | "smoking"
+    | "nightlife" | "politics" | "religion" | "education" | "kids";
+  label: string;
+  emoji: string;
+  options: readonly string[];
+}
+
+export const PROFILE_CATEGORIES: ProfileCategory[] = [
+  { key: "orientation", label: "Orientation", emoji: "🏳️🌈", options: ["Straight", "Bisexual", "Homosexual", "Pansexual", "Asexual"] },
+  { key: "relationship_status", label: "Relationship", emoji: "💍", options: ["Single", "Divorced", "Widowed", "Separated", "Open relationship"] },
+  { key: "drinking", label: "Drinking", emoji: "🍷", options: ["Never", "Socially", "Often", "Daily"] },
+  { key: "smoking", label: "Smoking", emoji: "🚬", options: ["Never", "Socially", "Often", "Daily"] },
+  { key: "nightlife", label: "Nightlife", emoji: "🌙", options: ["Homebody", "Occasionally", "Every weekend", "Night owl"] },
+  { key: "politics", label: "Politics", emoji: "🗳️", options: ["Liberal", "Moderate", "Conservative", "Apolitical"] },
+  { key: "religion", label: "Faith", emoji: "🙏", options: ["Christian", "Muslim", "Traditional", "Spiritual", "Atheist", "Other"] },
+  { key: "education", label: "Education", emoji: "🎓", options: ["High school", "Vocational", "Bachelor's", "Master's", "Doctorate", "Other"] },
+  { key: "kids", label: "Kids", emoji: "👶", options: ["No kids yet", "Want kids", "Have kids", "Don't want kids"] },
+];
+
+export const INTEREST_GROUPS: { group: string; emoji: string; tags: readonly string[] }[] = [
+  { group: "Music", emoji: "🎵", tags: ["Afrobeats", "Amapiano", "Gospel", "Hip-Hop", "R&B", "House", "Live bands"] },
+  { group: "Sports", emoji: "⚽", tags: ["Football", "Basketball", "Tennis", "Swimming", "Gym", "Running", "Cycling"] },
+  { group: "Food", emoji: "🍲", tags: ["Cooking", "Foodie", "Baking", "Grill master", "Street food", "Vegan"] },
+  { group: "Arts & Culture", emoji: "🎭", tags: ["Movies", "Comedy", "Theatre", "Poetry", "Fashion", "Photography", "Dancing"] },
+  { group: "Lifestyle", emoji: "🌿", tags: ["Travel", "Reading", "Gaming", "Camping", "Beach", "Volunteering"] },
+  { group: "Hustle", emoji: "💼", tags: ["Business", "Tech", "Crypto", "Content creation", "Investing", "Side hustles"] },
+];

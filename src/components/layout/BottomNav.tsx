@@ -36,7 +36,7 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-surface">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto flex max-w-md items-stretch justify-between">
         {TABS.map(({ href, label, icon: Icon, badge }) => {
           const active = pathname === href;
@@ -45,12 +45,12 @@ export default function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`flex flex-1 flex-col items-center gap-1 py-2 text-[11px] font-medium ${
+              className={`flex flex-1 flex-col items-center gap-1 py-1 text-[8px] font-medium ${
                 active ? "text-pink-500" : "text-muted"
               }`}
             >
               <span className="relative">
-                <Icon className="h-5 w-5" />
+                <Icon className=" h-[16px] w-[16]" />
                 {count > 0 && (
                   <span className="absolute -right-2 -top-1 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-pink-500 px-1 text-[9px] font-bold text-white">
                     {badgeText(count)}

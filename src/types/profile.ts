@@ -17,6 +17,17 @@ export interface Profile {
   photo_url: string | null;    // primary photo URL
   bio: string;
   age: number;
+  orientation: string | null;
+  relationship_status: string | null;
+  occupation: string | null;
+  education: string | null;
+  religion: string | null;
+  drinking: string | null;
+  smoking: string | null;
+  nightlife: string | null;
+  politics: string | null;
+  kids: string | null;
+  height_cm: number | null;
   bonus_super_likes: number;
   reveal_until: string | null;
   boosted_until: string | null;

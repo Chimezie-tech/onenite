@@ -53,6 +53,10 @@ interface TelegramWebApp {
   offEvent(eventType: "themeChanged" | "viewportChanged" | "backButtonClicked", eventHandler: () => void): void;
   HapticFeedback: TelegramHapticFeedback;
   openInvoice(url: string, callback?: (status: "paid" | "cancelled" | "failed" | "pending") => void): void;
+    LocationManager: {
+    init(callback?: () => void): void;
+    getLocation(callback: (data: { latitude: number; longitude: number } | null) => void): void;
+  };
 }
 
 interface Window {
