@@ -98,8 +98,11 @@ export default function PremiumPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-bold capitalize text-ink">{id}</p>
-              <p className="text-xs text-muted">
-                {PLANS[id].stars} ⭐ · renews automatically until cancelled
+                <p className="text-xs text-muted">
+                {PLANS[id].stars} ⭐ ·{" "}
+                {id === "monthly"
+                  ? "renews automatically until cancelled"
+                  : "one-time 7-day pass"}
               </p>
             </div>
             {id === "monthly" && (
