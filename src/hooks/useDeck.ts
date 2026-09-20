@@ -10,7 +10,7 @@ export function useDeck(me: Profile | null) {
   const fetchCards = useCallback(
     async (excludeIds: string[]) => {
       if (!me) return [];
-      
+
       // Everyone I already liked/passed → never show again
       const { data: acted } = await getSupabase()
         .from("likes").select("to_user_id").eq("from_user_id", me.id);
@@ -21,7 +21,6 @@ export function useDeck(me: Profile | null) {
 
       let query = getSupabase()
         .from("profiles")
-        // !inner = only profiles that HAVE a matching approved primary photo
         .select("*, profile_photos!inner(id, photo_url, is_primary, moderation_status)")
         .eq("onboarding_completed", true)
         .eq("is_banned", false)
@@ -41,7 +40,18 @@ export function useDeck(me: Profile | null) {
       }
 
       const { data } = await query;
-      return (data ?? []) as ProfileWithPhotos[];
+      const fresh = (data ?? []) as ProfileWithPhotos[];
+
+      // Boosted profiles jump to the top; ties broken by last active
+      const nowTs = Date.now();
+      fresh.sort((a, b) => {
+        const ab = a.boosted_until ? new Date(a.boosted_until).getTime() > nowTs : false;
+        const bb = b.boosted_until ? new Date(b.boosted_until).getTime() > nowTs : false;
+        if (ab !== bb) return ab ? -1 : 1;
+        return new Date(b.last_active_at).getTime() - new Date(a.last_active_at).getTime();
+      });
+
+      return fresh;
     },
     [me]
   );
@@ -58,25 +68,27 @@ export function useDeck(me: Profile | null) {
       }
     }
     init();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [me, fetchCards]);
 
-  // Remove a card and trigger top-up if needed
-  const removeCard = useCallback(async (id: string) => {
-    const nextCards = deck.filter((p) => p.id !== id);
-    setDeck(nextCards);
-    
-    // If we are low on cards, fetch more in the background
-    if (nextCards.length > 0 && nextCards.length < 3) {
-      const fresh = await fetchCards(nextCards.map((p) => p.id));
-      if (fresh.length > 0) {
-        setDeck((current) => [
-          ...current,
-          ...fresh.filter((f) => !current.some((c) => c.id === f.id)),
-        ]);
+  const removeCard = useCallback(
+    async (id: string) => {
+      const nextCards = deck.filter((p) => p.id !== id);
+      setDeck(nextCards);
+      if (nextCards.length > 0 && nextCards.length < 3) {
+        const fresh = await fetchCards(nextCards.map((p) => p.id));
+        if (fresh.length > 0) {
+          setDeck((current) => [
+            ...current,
+            ...fresh.filter((f) => !current.some((c) => c.id === f.id)),
+          ]);
+        }
       }
-    }
-  }, [deck, fetchCards]);
+    },
+    [deck, fetchCards]
+  );
 
   const reload = useCallback(async () => {
     setLoading(true);

@@ -17,6 +17,9 @@ export interface Profile {
   photo_url: string | null;    // primary photo URL
   bio: string;
   age: number;
+  bonus_super_likes: number;
+  reveal_until: string | null;
+  boosted_until: string | null;
   gender: Gender;
   interested_in: InterestedIn;
   city: string;
