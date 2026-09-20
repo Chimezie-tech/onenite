@@ -5,7 +5,7 @@ import { getSupabase, getToken } from "@/lib/supabase/client";
 import { getTelegramWebApp } from "@/lib/telegram/sdk";
 import { isPremiumActive } from "@/lib/premium";
 import { useUserStore } from "@/store/useUserStore";
-import { PLANS } from "@/lib/utils/constants";
+import { BOOSTS, ONE_TIME_ITEMS, PLANS } from "@/lib/utils/constants";
 
 const FEATURES = [
   "Unlimited likes every day",
@@ -120,6 +120,40 @@ export default function PremiumPage() {
             {busy === id ? "Opening Telegram…" : `Subscribe — ${PLANS[id].stars} ⭐`}
           </button>
         </div>
+      ))}
+
+            <h2 className="mt-4 text-sm font-bold text-ink">Impulse Boosts</h2>
+
+      {Object.values(BOOSTS).map((b) => (
+        <button
+          key={b.id}
+          type="button"
+          className="flex items-center justify-between rounded-xl border border-line bg-surface p-4 text-left"
+        >
+          <div>
+            <p className="text-sm font-semibold text-ink">{b.label}</p>
+            <p className="text-xs text-muted">{b.description}</p>
+          </div>
+          <span className="rounded-full bg-amber-400/20 px-2.5 py-1 text-xs font-bold text-amber-500">
+            {b.stars} ⭐
+          </span>
+        </button>
+      ))}
+
+      {Object.values(ONE_TIME_ITEMS).map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          className="flex items-center justify-between rounded-xl border border-line bg-surface p-4 text-left"
+        >
+          <div>
+            <p className="text-sm font-semibold text-ink">{item.label}</p>
+            <p className="text-xs text-muted">{item.description}</p>
+          </div>
+          <span className="rounded-full bg-pink-500/20 px-2.5 py-1 text-xs font-bold text-pink-500">
+            {item.stars} ⭐
+          </span>
+        </button>
       ))}
 
       {message && <p className="text-center text-xs text-ink">{message}</p>}

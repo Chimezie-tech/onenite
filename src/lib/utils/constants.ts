@@ -32,9 +32,44 @@ export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 // --- Premium pricing (Telegram Stars) ---
 export const PLANS: Record<"weekly" | "monthly", { stars: number; days: number }> = {
-  weekly:  { stars: 50,  days: 7 },
-  monthly: { stars: 150, days: 30 },
+  weekly:  { stars: 85,  days: 7 },
+  monthly: { stars: 250, days: 30 },
 };
+
+// --- One-time micro-purchases (Stars) ---
+export const ONE_TIME_ITEMS = {
+  super_likes_5: {
+    id: "super_likes_5" as const,
+    label: "5 Super Likes",
+    description: "Stand out — super likes are 3× more likely to match.",
+    stars: 30,
+  },
+  reveal_who_liked_you: {
+    id: "reveal_who_liked_you" as const,
+    label: "Reveal who liked you",
+    description: "See everyone who already liked you, instantly.",
+    stars: 60,
+  },
+} as const;
+
+export type OneTimeItemId = keyof typeof ONE_TIME_ITEMS;
+
+// --- Boosts (time-limited visibility multiplier) ---
+export const BOOST_DURATIONS_MINUTES = {
+  "30min": 30,
+} as const;
+
+export const BOOSTS = {
+  boost_30min: {
+    id: "boost_30min" as const,
+    label: "30-minute Profile Boost",
+    description: "Your profile appears first in the deck for 30 minutes.",
+    stars: 40,
+    duration_minutes: BOOST_DURATIONS_MINUTES["30min"],
+  },
+} as const;
+
+export type BoostId = keyof typeof BOOSTS;
 
 // --- Ads ---
 export const AD_ROTATION_MS = 6000;
