@@ -1,5 +1,4 @@
-
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShieldCheck, ShieldAlert, Share2 } from "lucide-react";
