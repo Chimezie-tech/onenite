@@ -93,6 +93,17 @@ export default function OnboardingPage() {
       .from("profiles").update(payload).eq("id", profile.id);
     setLoading(false);
     if (error) { alert(`Error saving profile: ${error.message}`); return; }
+        if (profile.referred_by) {
+      const { data: existing } = await getSupabase()
+        .from("referrals").select("id").eq("referred_id", profile.id).maybeSingle();
+      if (!existing) {
+        await getSupabase().from("referrals").insert({
+          referrer_id: profile.referred_by,
+          referred_id: profile.id,
+        });
+        await getSupabase().rpc("grant_referral_bonus", { referrer_uuid: profile.referred_by });
+      }
+    }
     patchProfile(payload);
     router.replace("/");
   }

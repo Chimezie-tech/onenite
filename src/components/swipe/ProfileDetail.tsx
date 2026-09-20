@@ -6,6 +6,8 @@ import { getSupabase } from "@/lib/supabase/client";
 import { timeAgo } from "@/lib/utils/helpers";
 import { INTEREST_GROUPS, PROFILE_CATEGORIES } from "@/lib/utils/constants";
 import type { ProfilePhoto, ProfileWithPhotos, SwipeAction } from "@/types";
+import { getToken } from "@/lib/supabase/client"; // add to imports
+
 
 const GENDER_LABEL: Record<string, string> = { female: "Woman", male: "Man", other: "Non-binary" };
 const LOOKING_LABEL: Record<string, string> = { male: "Men", female: "Women", everyone: "Everyone" };
@@ -20,6 +22,18 @@ export default function ProfileDetail({ profile, onClose, onAction }: Props) {
   const [photos, setPhotos] = useState<ProfilePhoto[]>([]);
   const [photoIndex, setPhotoIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+    if (!profile) return;
+    void fetch("/api/profile-views", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+      body: JSON.stringify({ viewedId: profile.id }),
+    });
+  }, [profile?.id]);
 
   useEffect(() => {
     if (!profile) return;

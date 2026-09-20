@@ -52,3 +52,7 @@ export async function requireUser(req: Request): Promise<Profile | null> {
     return null;
   }
 }
+
+export function generateReferralCode(): string {
+  return Math.random().toString(36).substring(2, 10);
+}

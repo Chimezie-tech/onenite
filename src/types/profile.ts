@@ -17,6 +17,10 @@ export interface Profile {
   photo_url: string | null;    // primary photo URL
   bio: string;
   age: number;
+  referral_code: string | null;
+  referred_by: string | null;
+  bonus_likes: number;
+  last_reengaged_at: string | null;
   orientation: string | null;
   relationship_status: string | null;
   occupation: string | null;

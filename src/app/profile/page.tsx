@@ -1,14 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ShieldCheck, ShieldAlert } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Share2 } from "lucide-react";
 import AdBanner from "@/components/ads/AdBanner";
 import PhotoGrid from "@/components/profile/PhotoGrid";
 import PhotoUploader from "@/components/profile/PhotoUploader";
 import { getToken, getSupabase } from "@/lib/supabase/client";
 import { useUserStore } from "@/store/useUserStore";
-import type { ProfilePhoto } from "@/types";
+import { getTelegramWebApp } from "@/lib/telegram/sdk";
 import { profileScore } from "@/lib/utils/profileScore";
+import type { ProfilePhoto } from "@/types";
 
 type CheckState = "checking" | "admin" | "user" | "unconfigured";
 
@@ -19,11 +20,12 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let active = true;
-       async function load() {
+    async function load() {
       if (!profile) return;
       const { data } = await getSupabase()
-        .from("profile_photos").select("*")
-        .eq("user_id", profile.id)            // ✅ only MY photos
+        .from("profile_photos")
+        .select("*")
+        .eq("user_id", profile.id)
         .order("created_at", { ascending: true });
       if (active) setPhotos((data ?? []) as ProfilePhoto[]);
     }
@@ -41,16 +43,32 @@ export default function ProfilePage() {
         if (active) setState("user");
       }
     }
-    load();
-    check();
-    return () => { active = false; };
-  }, []);
+    void load();
+    void check();
+    return () => {
+      active = false;
+    };
+  }, [profile]);
+
+  function inviteFriends() {
+    const tg = getTelegramWebApp();
+    if (!profile?.referral_code) return;
+    const link = `https://t.me/OneNite_bot/app?startapp=ref_${profile.referral_code}`;
+    const text = encodeURIComponent("Join me on OneNite! ❤️");
+    const url = encodeURIComponent(link);
+    if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${url}&text=${text}`);
+    else window.open(`https://t.me/share/url?url=${url}&text=${text}`, "_blank");
+  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-4 pb-24">
       <p className="text-lg font-bold text-ink">My Profile</p>
-        <p className="text-xs text-muted">
-        Profile strength: {profile ? profileScore(profile, photos.filter((p) => p.moderation_status === "approved").length) : 0}%
+      <p className="text-xs text-muted">
+        Profile strength:{" "}
+        {profile
+          ? profileScore(profile, photos.filter((p) => p.moderation_status === "approved").length)
+          : 0}
+        %
       </p>
 
       <PhotoGrid photos={photos} onChange={setPhotos} />
@@ -78,8 +96,23 @@ export default function ProfilePage() {
         </p>
       )}
 
+      <button
+        type="button"
+        onClick={inviteFriends}
+        className="flex items-center justify-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm font-semibold text-ink"
+      >
+        <Share2 className="h-4 w-4" /> Invite Friends (+1 Like each)
+      </button>
+      {profile && profile.bonus_likes > 0 && (
+        <p className="text-center text-xs font-semibold text-pink-500">
+          🎁 {profile.bonus_likes} bonus likes ready to use!
+        </p>
+      )}
+
       <AdBanner placement="profile" />
-      <p className="text-center text-xs text-muted">{profile?.city} • {profile?.age}</p>
+      <p className="text-center text-xs text-muted">
+        {profile?.city} • {profile?.age}
+      </p>
     </main>
   );
 }
