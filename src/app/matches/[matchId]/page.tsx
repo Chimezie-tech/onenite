@@ -10,6 +10,7 @@ import ChatInput from "@/components/chat/ChatInput";
 import { getSupabase } from "@/lib/supabase/client";
 import { useUserStore } from "@/store/useUserStore";
 import type { Message, Profile } from "@/types";
+import PremiumBadge from "@/components/ui/PremiumBadge";
 
 export default function ChatThreadPage() {
   const params = useParams<{ matchId: string }>();
@@ -160,7 +161,10 @@ export default function ChatThreadPage() {
         <button type="button" aria-label="Back" onClick={() => router.push("/matches")} className="text-ink">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <p className="flex-1 text-sm font-bold text-ink">{other.first_name}</p>
+        <p className="flex items-center gap-1 truncate text-sm font-semibold text-ink">
+          {other.first_name}
+          {other.is_premium && <PremiumBadge />}
+        </p>
         {typing && <span className="text-xs text-pink-500">typing…</span>}
       </header>
 

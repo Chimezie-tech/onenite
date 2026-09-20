@@ -18,6 +18,7 @@ import {
   PREMIUM_DAILY_SUPER_LIKES,
 } from "@/lib/utils/constants";
 import type { ProfileWithPhotos, SwipeAction } from "@/types";
+import { isPremiumActive } from "@/lib/premium";
 
 interface Limits {
   likes: number;
@@ -34,6 +35,7 @@ export default function Home() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [notice, setNotice] = useState("");
   const [detail, setDetail] = useState<ProfileWithPhotos | null>(null);
+  const premium = isPremiumActive(profile);
 
   useEffect(() => {
     if (!profile) return;
@@ -44,8 +46,8 @@ export default function Home() {
         .from("daily_limits").select("*")
         .eq("user_id", profile.id).eq("limit_date", today).maybeSingle();
       setLimits({
-        likes: profile.is_premium ? 9999 : FREE_DAILY_LIKES - (lim?.likes_used ?? 0),
-        supers: profile.is_premium
+        likes: premium ? 9999 : FREE_DAILY_LIKES - (lim?.likes_used ?? 0),
+        supers: premium
           ? PREMIUM_DAILY_SUPER_LIKES - (lim?.super_likes_used ?? 0)
           : FREE_DAILY_SUPER_LIKES - (lim?.super_likes_used ?? 0),
       });
@@ -66,11 +68,11 @@ export default function Home() {
     if (!profile) return;
 
     // Client-side UX guard (server trigger remains the source of truth)
-    if (action === "like" && !profile.is_premium && limits && limits.likes <= 0) {
+    if (action === "like" && !premium && limits && limits.likes <= 0) {
       setShowPaywall(true);
       return;
     }
-    if (action === "super" && !profile.is_premium && limits && limits.supers <= 0) {
+    if (action === "super" && !premium && limits && limits.supers <= 0) {
       setNotice("No super likes left today 💫");
       return;
     }
@@ -122,7 +124,7 @@ export default function Home() {
           href="/profile"
           className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-center text-xs font-semibold text-amber-500"
         >
-          📸 Add an approved photo to start getting matches
+          Add an approved photo to start getting matches
         </Link>
       )}
 
@@ -136,7 +138,7 @@ export default function Home() {
         <div className="flex justify-center gap-3 text-xs font-semibold text-muted">
           <span className="flex items-center gap-1 rounded-full border border-line bg-surface px-3 py-1">
             <Heart className="h-3 w-3 text-pink-500" />
-            {profile?.is_premium ? "∞" : limits.likes}
+            {premium ? "∞" : limits.likes}
           </span>
           <span className="flex items-center gap-1 rounded-full border border-line bg-surface px-3 py-1">
             <Star className="h-3 w-3 text-amber-400" />

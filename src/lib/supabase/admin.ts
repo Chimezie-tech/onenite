@@ -36,3 +36,19 @@ export async function requireAdmin(req: Request): Promise<Profile | null> {
     return null;
   }
 }
+
+/** Verifies the caller's JWT and returns their profile (or null). */
+export async function requireUser(req: Request): Promise<Profile | null> {
+  const header = req.headers.get("authorization") ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  if (!token) return null;
+  try {
+    const payload = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as { sub?: string };
+    if (!payload.sub) return null;
+    const { data } = await getSupabaseAdmin()
+      .from("profiles").select("*").eq("id", payload.sub).maybeSingle();
+    return (data as Profile) ?? null;
+  } catch {
+    return null;
+  }
+}

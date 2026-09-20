@@ -52,6 +52,7 @@ interface TelegramWebApp {
     onEvent(eventType: "themeChanged" | "viewportChanged" | "backButtonClicked", eventHandler: () => void): void;
   offEvent(eventType: "themeChanged" | "viewportChanged" | "backButtonClicked", eventHandler: () => void): void;
   HapticFeedback: TelegramHapticFeedback;
+  openInvoice(url: string, callback?: (status: "paid" | "cancelled" | "failed" | "pending") => void): void;
 }
 
 interface Window {

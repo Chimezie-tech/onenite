@@ -7,6 +7,7 @@ import { getSupabase } from "@/lib/supabase/client";
 import { useUserStore } from "@/store/useUserStore";
 import { chatTimestamp, truncate } from "@/lib/utils/helpers";
 import type { Message, Profile } from "@/types";
+import PremiumBadge from "@/components/ui/PremiumBadge";
 
 interface MatchProfile extends Profile {
   profile_photos: { photo_url: string; is_primary: boolean; moderation_status: string }[];
@@ -115,7 +116,10 @@ export default function MatchesPage() {
                 className="h-12 w-12 rounded-full object-cover"
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-ink">{other.first_name}</p>
+                <p className="flex items-center gap-1 truncate text-sm font-semibold text-ink">
+                  {other.first_name}
+                  {other.is_premium && <PremiumBadge />}
+                </p>
                 <p className="truncate text-xs text-muted">
                   {last
                     ? `${last.sender_id === profile?.id ? "You: " : ""}${truncate(last.content, 40)}`

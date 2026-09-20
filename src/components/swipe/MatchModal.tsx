@@ -2,6 +2,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import type { ProfileWithPhotos } from "@/types";
+import PremiumBadge from "../ui/PremiumBadge";
 
 interface Props {
   match: ProfileWithPhotos | null;
@@ -30,9 +31,9 @@ export default function MatchModal({ match, myPhotoUrl, onClose }: Props) {
             className="w-full max-w-sm rounded-2xl border border-line bg-surface p-6 text-center"
           >
             <p className="text-3xl font-extrabold text-pink-500">It&apos;s a Match! 🎉</p>
-            <p className="mt-1 text-sm text-muted">
-              You and {match.first_name} liked each other.
-            </p>
+            <p className="mt-1 flex items-center justify-center gap-1 text-sm text-muted">
+  You and {match.first_name} {match.is_premium && <PremiumBadge />} liked each other.
+</p>
 
             <div className="mt-4 flex items-center justify-center gap-3">
               {myPhotoUrl && (
