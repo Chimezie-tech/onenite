@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { sendTelegramMessage, OPEN_APP_BUTTON } from "@/lib/telegram/bot";
 import { PLANS } from "@/lib/utils/constants";
@@ -40,7 +40,6 @@ export async function POST(req: Request) {
     .from("profiles").select("*").eq("id", payload.uid).maybeSingle();
   if (!profile) return NextResponse.json({ ok: true, ignored: true });
 
-  // Renewals extend from current expiry; new/lapsed subs start now
   const currentExpiry = profile.premium_expires_at ? new Date(profile.premium_expires_at) : null;
   const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
   const expiresAt = new Date(base.getTime() + PLANS[payload.plan].days * 24 * 60 * 60 * 1000);
@@ -64,7 +63,7 @@ export async function POST(req: Request) {
 
   await sendTelegramMessage(
     profile.telegram_id,
-    `💎 Welcome to OneNite Premium!\nYour ${payload.plan} plan is active until ${expiresAt.toDateString()}.`,
+    "💎 Welcome to OneNite Premium!\nYour " + payload.plan + " plan is active until " + expiresAt.toDateString() + ".",
     OPEN_APP_BUTTON
   );
 
