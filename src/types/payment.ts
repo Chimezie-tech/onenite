@@ -1,4 +1,4 @@
-export type PlanId = "weekly" | "monthly" | "yearly";
+export type PlanId = "weekly" | "monthly";
 export type PaymentMethod = "telegram_stars" | "flutterwave";
 
 export interface Subscription {
