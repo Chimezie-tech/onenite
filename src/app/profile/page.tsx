@@ -101,7 +101,7 @@ export default function ProfilePage() {
         onClick={inviteFriends}
         className="flex items-center justify-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm font-semibold text-ink"
       >
-        <Share2 className="h-4 w-4" /> Invite Friends (+1 Like each)
+        <Share2 className="h-4 w-4" /> Invite your Friends (+1 Like each)
       </button>
       {profile && profile.bonus_likes > 0 && (
         <p className="text-center text-xs font-semibold text-pink-500">
