@@ -105,7 +105,7 @@ export default function ProfilePage() {
       </button>
       {profile && profile.bonus_likes > 0 && (
         <p className="text-center text-xs font-semibold text-pink-500">
-          🎁 {profile.bonus_likes} bonus likes ready to use!
+          {profile.bonus_likes} bonus likes ready to use!
         </p>
       )}
 
