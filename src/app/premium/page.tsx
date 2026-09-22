@@ -20,11 +20,26 @@ export default function PremiumPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const premium = isPremiumActive(profile);
+  const [priceMap, setPriceMap] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    void (async () => {
+      const res = await fetch("/api/pricing");
+      if (!res.ok) return;
+      const rows = (await res.json()) as Array<{ key: string; stars: number }>;
+      const m: Record<string, number> = {};
+      for (const r of rows) m[r.key] = r.stars;
+      setPriceMap(m);
+    })();
+  }, []);
 
   async function refreshProfile() {
     if (!profile) return;
     const { data } = await getSupabase()
-      .from("profiles").select("*").eq("id", profile.id).maybeSingle();
+      .from("profiles")
+      .select("*")
+      .eq("id", profile.id)
+      .maybeSingle();
     if (data) patchProfile(data);
   }
 
@@ -36,7 +51,10 @@ export default function PremiumPage() {
   async function checkout(body: Record<string, unknown>, busyKey: string) {
     setMessage("");
     const tg = getTelegramWebApp();
-    if (!tg) { setMessage("Open this page inside Telegram to pay."); return; }
+    if (!tg) {
+      setMessage("Open this page inside Telegram to pay.");
+      return;
+    }
     setBusy(busyKey);
     try {
       const res = await fetch("/api/payments/stars/create", {
@@ -94,88 +112,106 @@ export default function PremiumPage() {
         ))}
       </ul>
 
-      {(Object.keys(PLANS) as Array<"weekly" | "monthly">).map((id) => (
-        <div key={id} className="rounded-xl border border-line bg-surface p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-bold capitalize text-ink">{id}</p>
-              <p className="text-xs text-muted">
-                {PLANS[id].stars} ⭐ ·{" "}
-                {id === "monthly" ? "renews automatically until cancelled" : "one-time 7-day pass"}
-              </p>
+      {(Object.keys(PLANS) as Array<"weekly" | "monthly">).map((id) => {
+        const dynamicStars = priceMap[`sub:${id}`] ?? PLANS[id].stars;
+        return (
+          <div key={id} className="rounded-xl border border-line bg-surface p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold capitalize text-ink">{id}</p>
+                <p className="text-xs text-muted">
+                  {dynamicStars} ⭐ ·{" "}
+                  {id === "monthly"
+                    ? "renews automatically until cancelled"
+                    : "one-time 7-day pass"}
+                </p>
+              </div>
+              {id === "monthly" && (
+                <span className="rounded-full bg-pink-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                  BEST VALUE
+                </span>
+              )}
             </div>
-            {id === "monthly" && (
-              <span className="rounded-full bg-pink-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                BEST VALUE
-              </span>
-            )}
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => checkout({ kind: "subscription", plan: id }, `sub:${id}`)}
+              className="mt-3 w-full rounded-xl bg-pink-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+            >
+              {busy === `sub:${id}` ? "Opening Telegram…" : `Subscribe — ${dynamicStars} ⭐`}
+            </button>
           </div>
-          <button
-            type="button"
-            disabled={busy !== null}
-            onClick={() => checkout({ kind: "subscription", plan: id }, `sub:${id}`)}
-            className="mt-3 w-full rounded-xl bg-pink-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-          >
-            {busy === `sub:${id}` ? "Opening Telegram…" : `Subscribe — ${PLANS[id].stars} ⭐`}
-          </button>
-        </div>
-      ))}
+        );
+      })}
 
       <h2 className="mt-2 text-sm font-bold text-ink">Impulse Boosts</h2>
 
-      {Object.values(BOOSTS).map((b) => (
-        <div key={b.id} className="rounded-xl border border-line bg-surface p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-ink">{b.label}</p>
-              <p className="text-xs text-muted">{b.description}</p>
+      {Object.values(BOOSTS).map((b) => {
+        const dynamicStars = priceMap[`boost:${b.id}`] ?? b.stars;
+        return (
+          <div key={b.id} className="rounded-xl border border-line bg-surface p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-ink">{b.label}</p>
+                <p className="text-xs text-muted">{b.description}</p>
+              </div>
+              <span className="rounded-full bg-amber-400/20 px-2.5 py-1 text-xs font-bold text-amber-500">
+                {dynamicStars} ⭐
+              </span>
             </div>
-            <span className="rounded-full bg-amber-400/20 px-2.5 py-1 text-xs font-bold text-amber-500">
-              {b.stars} ⭐
-            </span>
+            {boostActive && (
+              <p className="mt-2 text-xs font-semibold text-amber-500">
+                🚀 Active until {new Date(profile?.boosted_until ?? "").toTimeString().slice(0, 5)}
+              </p>
+            )}
+            <button
+              type="button"
+              disabled={busy !== null || boostActive}
+              onClick={() => checkout({ kind: "boost", boost: b.id }, `boost:${b.id}`)}
+              className="mt-3 w-full rounded-xl bg-amber-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+            >
+              {busy === `boost:${b.id}`
+                ? "Opening Telegram…"
+                : boostActive
+                ? "Boost running…"
+                : `Boost me — ${dynamicStars} ⭐`}
+            </button>
           </div>
-          {boostActive && (
-            <p className="mt-2 text-xs font-semibold text-amber-500">
-              🚀 Active until {new Date(profile?.boosted_until ?? "").toTimeString().slice(0, 5)}
-            </p>
-          )}
-          <button
-            type="button"
-            disabled={busy !== null || boostActive}
-            onClick={() => checkout({ kind: "boost", boost: b.id }, `boost:${b.id}`)}
-            className="mt-3 w-full rounded-xl bg-amber-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-          >
-            {busy === `boost:${b.id}` ? "Opening Telegram…" : boostActive ? "Boost running…" : `Boost me — ${b.stars} ⭐`}
-          </button>
-        </div>
-      ))}
+        );
+      })}
 
-      {Object.values(ONE_TIME_ITEMS).map((item) => (
-        <div key={item.id} className="rounded-xl border border-line bg-surface p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-ink">{item.label}</p>
-              <p className="text-xs text-muted">{item.description}</p>
+      {Object.values(ONE_TIME_ITEMS).map((item) => {
+        const dynamicStars = priceMap[`onetime:${item.id}`] ?? item.stars;
+        return (
+          <div key={item.id} className="rounded-xl border border-line bg-surface p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-ink">{item.label}</p>
+                <p className="text-xs text-muted">{item.description}</p>
+              </div>
+              <span className="rounded-full bg-pink-500/20 px-2.5 py-1 text-xs font-bold text-pink-500">
+                {dynamicStars} ⭐
+              </span>
             </div>
-            <span className="rounded-full bg-pink-500/20 px-2.5 py-1 text-xs font-bold text-pink-500">
-              {item.stars} ⭐
-            </span>
+            {item.id === "reveal_who_liked_you" && revealActive && (
+              <p className="mt-2 text-xs font-semibold text-pink-500">
+                👀 Unlocked until{" "}
+                {new Date(profile?.reveal_until ?? "").toTimeString().slice(0, 5)}
+              </p>
+            )}
+            <button
+              type="button"
+              disabled={busy !== null || (item.id === "reveal_who_liked_you" && revealActive)}
+              onClick={() =>
+                checkout({ kind: "onetime", item: item.id }, `onetime:${item.id}`)
+              }
+              className="mt-3 w-full rounded-xl bg-pink-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+            >
+              {busy === `onetime:${item.id}` ? "Opening Telegram…" : `Buy — ${dynamicStars} ⭐`}
+            </button>
           </div>
-          {item.id === "reveal_who_liked_you" && revealActive && (
-            <p className="mt-2 text-xs font-semibold text-pink-500">
-              👀 Unlocked until {new Date(profile?.reveal_until ?? "").toTimeString().slice(0, 5)}
-            </p>
-          )}
-          <button
-            type="button"
-            disabled={busy !== null || (item.id === "reveal_who_liked_you" && revealActive)}
-            onClick={() => checkout({ kind: "onetime", item: item.id }, `onetime:${item.id}`)}
-            className="mt-3 w-full rounded-xl bg-pink-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-          >
-            {busy === `onetime:${item.id}` ? "Opening Telegram…" : `Buy — ${item.stars} ⭐`}
-          </button>
-        </div>
-      ))}
+        );
+      })}
 
       {message && <p className="text-center text-xs text-ink">{message}</p>}
       <p className="text-center text-[11px] text-muted">

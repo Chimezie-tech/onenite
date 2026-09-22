@@ -18,11 +18,18 @@ export async function POST(req: Request) {
 
   const admin = getSupabaseAdmin();
   switch (body.action) {
-    case "suspend":
-      await admin.from("profiles").update({ is_banned: true }).eq("id", body.userId);
+    case "suspend": {
+      const endRaw = body.patch?.end as string | null | undefined;
+      const suspendedUntil = endRaw ? new Date(endRaw).toISOString() : null;
+      await admin.from("profiles")
+        .update({ is_banned: true, suspended_until: suspendedUntil })
+        .eq("id", body.userId);
       break;
+    }
     case "unsuspend":
-      await admin.from("profiles").update({ is_banned: false }).eq("id", body.userId);
+      await admin.from("profiles")
+        .update({ is_banned: false, suspended_until: null })
+        .eq("id", body.userId);
       break;
     case "upgrade": {
       const until = new Date(Date.now() + 30 * 86400000).toISOString();

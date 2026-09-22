@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ShoppingBag } from "lucide-react";
+import { Link, ShoppingBag } from "lucide-react";
 import { getSupabase } from "@/lib/supabase/client";
 import { getTelegramWebApp } from "@/lib/telegram/sdk";
 import { CURRENCY_SYMBOLS } from "@/lib/utils/constants";
@@ -39,8 +39,10 @@ export default function ShopPage() {
       ) : products.length === 0 ? (
         <p className="mt-10 text-center text-muted">No products yet. Check back soon!</p>
       ) : (
+        
         <div className="grid grid-cols-2 gap-3">
           {products.map((p) => (
+            <Link key={p.id} href={`/shop/${p.id}`} className="overflow-hidden rounded-xl border border-line bg-surface">
             <div key={p.id} className="overflow-hidden rounded-xl border border-line bg-surface">
               <img src={p.image_url} alt={p.name} className="h-32 w-full object-cover" />
               <div className="flex flex-col gap-1 p-3">
@@ -58,6 +60,7 @@ export default function ShopPage() {
                 </button>
               </div>
             </div>
+            </Link>
           ))}
         </div>
       )}

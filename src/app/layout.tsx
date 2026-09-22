@@ -5,6 +5,7 @@ import "./globals.css";
 import ThemeProvider from "@/components/layout/ThemeProvider";
 import AuthGuard from "@/components/layout/AuthGuard";
 import NavGate from "@/components/layout/NavGate";
+import HelpFab from "@/components/support/HelpFab";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} min-h-screen`}>
         <ThemeProvider>
           <AuthGuard>{children}</AuthGuard>
+          <HelpFab />
           <NavGate />
         </ThemeProvider>
       </body>

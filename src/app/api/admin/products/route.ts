@@ -1,32 +1,28 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin, requireAdmin } from "@/lib/supabase/admin";
+import { requireAdmin, getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export async function POST(req: Request) {
-  const admin = await requireAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const adminUser = await requireAdmin(req);
+  if (!adminUser) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const body = (await req.json()) as {
-    name?: string; price?: number; currency?: string;
-    image_url?: string; description?: string; cta_label?: string; cta_url?: string;
-  };
-  if (!body.name || body.price === undefined || !body.image_url) {
-    return NextResponse.json({ error: "name, price and image_url are required" }, { status: 400 });
+  const body = (await req.json()) as Record<string, unknown>;
+  if (!body.name || body.price === undefined) {
+    return NextResponse.json({ error: "name + price required" }, { status: 400 });
   }
 
-  const { data, error } = await getSupabaseAdmin()
-    .from("products")
-    .insert({
-      name: body.name,
-      price: body.price,
-      currency: body.currency ?? "NGN",
-      image_url: body.image_url,
-      description: body.description ?? "",
-      cta_label: body.cta_label ?? "Buy Now",
-      cta_url: body.cta_url || null,
-    })
-    .select()
-    .single();
+  const { error } = await getSupabaseAdmin().from("products").insert({
+    name: body.name,
+    price: body.price,
+    image_url: body.image_url ?? "",
+    thumbnail_url: body.thumbnail_url ?? null,
+    images: body.images ?? [],
+    description: body.description ?? null,
+    location: body.location ?? null,
+    shipping_available: body.shipping_available ?? false,
+    colors: body.colors ?? [],
+    cta_url: body.cta_url ?? null,
+  });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ product: data }, { status: 201 });
+  return NextResponse.json({ ok: true });
 }

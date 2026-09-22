@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/supabase/admin";
+import { requireUser, getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PLANS, ONE_TIME_ITEMS, BOOSTS } from "@/lib/utils/constants";
 
 const MONTHLY_SECONDS = 30 * 24 * 60 * 60;
@@ -47,6 +47,21 @@ export async function POST(req: Request) {
   } else {
     return NextResponse.json({ error: "Invalid product" }, { status: 400 });
   }
+
+  // Dynamic pricing override from admin console
+  const { data: priceRow } = await getSupabaseAdmin()
+    .from("pricing")
+    .select("stars, currency")
+    .eq("key", productId)
+    .maybeSingle();
+
+  if (priceRow && priceRow.currency !== "stars") {
+    return NextResponse.json(
+      { error: "This item is priced in fiat — local payments coming soon" },
+      { status: 400 }
+    );
+  }
+  if (priceRow?.stars) stars = priceRow.stars;
 
   const invoice: Record<string, unknown> = {
     title,

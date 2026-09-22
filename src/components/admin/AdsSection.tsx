@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { getToken } from "@/lib/supabase/client";
+import AutoGrowTextarea from "@/components/ui/AutoGrowTextarea";
+import ImageUploadField from "@/components/admin/ImageUploadField";
 
 const FIELD = "w-full rounded-lg border border-line bg-field p-2 text-sm text-ink";
 
@@ -9,11 +11,16 @@ export default function AdsSection() {
 
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
-  const [productImage, setProductImage] = useState("");
+  const [productThumb, setProductThumb] = useState<string | null>(null);
+  const [productImages, setProductImages] = useState<string[]>([]);
   const [productCta, setProductCta] = useState("");
+  const [productDesc, setProductDesc] = useState("");
+  const [productLocation, setProductLocation] = useState("");
+  const [shipping, setShipping] = useState(false);
+  const [colors, setColors] = useState("");
 
   const [adTitle, setAdTitle] = useState("");
-  const [adImage, setAdImage] = useState("");
+  const [adImage, setAdImage] = useState<string | null>(null);
   const [adCtaUrl, setAdCtaUrl] = useState("");
   const [adCtaType, setAdCtaType] = useState<"internal" | "external">("external");
   const [placements, setPlacements] = useState<string[]>(["home"]);
@@ -41,13 +48,44 @@ export default function AdsSection() {
     setPlacements((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]));
   }
 
+  const colorList = colors.split(",").map((c) => c.trim()).filter(Boolean);
+
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <section className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-4">
         <h2 className="font-semibold text-ink">New Product</h2>
         <input className={FIELD} placeholder="Name" value={productName} onChange={(e) => setProductName(e.target.value)} />
         <input className={FIELD} placeholder="Price (e.g. 1500)" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} />
-        <input className={FIELD} placeholder="Image URL" value={productImage} onChange={(e) => setProductImage(e.target.value)} />
+        <ImageUploadField label="thumbnail" value={productThumb} onChange={setProductThumb} />
+        <div className="flex flex-col gap-2 rounded-lg border border-line p-2">
+          <p className="text-xs text-muted">Gallery ({productImages.length}/6)</p>
+          {productImages.map((url, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <img src={url} alt="" className="h-8 w-8 rounded object-cover" />
+              <button type="button" className="text-xs text-red-400"
+                onClick={() => setProductImages(productImages.filter((_, x) => x !== i))}>Remove</button>
+            </div>
+          ))}
+          {productImages.length < 6 && (
+            <ImageUploadField
+              label={`image ${productImages.length + 1}`}
+              value={null}
+              onChange={(url) => setProductImages([...productImages, url])}
+            />
+          )}
+        </div>
+        <AutoGrowTextarea
+          value={productDesc}
+          onChange={setProductDesc}
+          placeholder="Description (expands as you type)…"
+          className={FIELD}
+        />
+        <input className={FIELD} placeholder="Location (e.g. Lagos Island)" value={productLocation} onChange={(e) => setProductLocation(e.target.value)} />
+        <input className={FIELD} placeholder="Colors as hex, comma-separated (#e11d48, #0ea5e9)" value={colors} onChange={(e) => setColors(e.target.value)} />
+        <label className="flex items-center gap-2 text-sm text-ink">
+          <input type="checkbox" checked={shipping} onChange={(e) => setShipping(e.target.checked)} />
+          Shipping available
+        </label>
         <input className={FIELD} placeholder="Checkout URL (optional)" value={productCta} onChange={(e) => setProductCta(e.target.value)} />
         <button
           type="button"
@@ -56,7 +94,13 @@ export default function AdsSection() {
             void post("/api/admin/products", {
               name: productName,
               price: Number(productPrice),
-              image_url: productImage,
+              image_url: productThumb ?? productImages[0] ?? "",
+              thumbnail_url: productThumb,
+              images: productImages,
+              description: productDesc || null,
+              location: productLocation || null,
+              shipping_available: shipping,
+              colors: colorList,
               cta_url: productCta || null,
             })
           }
@@ -69,12 +113,9 @@ export default function AdsSection() {
       <section className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-4">
         <h2 className="font-semibold text-ink">New Ad</h2>
         <input className={FIELD} placeholder="Title" value={adTitle} onChange={(e) => setAdTitle(e.target.value)} />
-        <input className={FIELD} placeholder="Image URL" value={adImage} onChange={(e) => setAdImage(e.target.value)} />
-        <select
-          className={FIELD}
-          value={adCtaType}
-          onChange={(e) => setAdCtaType(e.target.value === "internal" ? "internal" : "external")}
-        >
+        <ImageUploadField label="ad image" value={adImage} onChange={setAdImage} />
+        <select className={FIELD} value={adCtaType}
+          onChange={(e) => setAdCtaType(e.target.value === "internal" ? "internal" : "external")}>
           <option value="external">External URL</option>
           <option value="internal">Internal page (e.g. /premium)</option>
         </select>
@@ -93,7 +134,7 @@ export default function AdsSection() {
           onClick={() =>
             void post("/api/admin/ads", {
               title: adTitle,
-              image_url: adImage,
+              image_url: adImage ?? "",
               cta_type: adCtaType,
               cta_url: adCtaUrl,
               placements,

@@ -3,7 +3,12 @@ export type ProductStatus = "active" | "sold_out" | "archived";
 export interface Product {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
+  location: string | null;
+  shipping_available: boolean;
+  colors: string[];
+  images: string[];
+  thumbnail_url: string | null;
   price: number;
   currency: string;
   image_url: string;

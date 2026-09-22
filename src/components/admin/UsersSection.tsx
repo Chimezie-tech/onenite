@@ -18,6 +18,8 @@ export default function UsersSection() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkMsg, setBulkMsg] = useState("");
   const [bulkResult, setBulkResult] = useState("");
+  const [suspendStart, setSuspendStart] = useState(""); 
+  const [suspendEnd, setSuspendEnd] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
