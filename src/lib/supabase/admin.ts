@@ -20,23 +20,6 @@ export function isAdminTelegramId(telegramId: number): boolean {
   return raw.split(",").map((s) => s.trim()).includes(String(telegramId));
 }
 
-/** Verifies the caller's JWT and confirms they are an admin. Returns profile or null. */
-export async function requireAdmin(req: Request): Promise<Profile | null> {
-  const header = req.headers.get("authorization") ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if (!token) return null;
-  try {
-    const payload = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as { sub?: string };
-    if (!payload.sub) return null;
-    const { data } = await getSupabaseAdmin()
-      .from("profiles").select("*").eq("id", payload.sub).maybeSingle();
-    if (!data) return null;
-    return isAdminTelegramId(data.telegram_id) ? (data as Profile) : null;
-  } catch {
-    return null;
-  }
-}
-
 /** Verifies the caller's JWT and returns their profile (or null). */
 export async function requireUser(req: Request): Promise<Profile | null> {
   const header = req.headers.get("authorization") ?? "";
@@ -51,6 +34,13 @@ export async function requireUser(req: Request): Promise<Profile | null> {
   } catch {
     return null;
   }
+}
+
+/** Verifies JWT + admin Telegram ID. Returns null for everyone else. */
+export async function requireAdmin(req: Request): Promise<Profile | null> {
+  const user = await requireUser(req);
+  if (!user) return null;
+  return isAdminTelegramId(user.telegram_id) ? user : null;
 }
 
 export function generateReferralCode(): string {
