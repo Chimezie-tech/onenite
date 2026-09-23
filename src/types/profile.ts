@@ -35,6 +35,7 @@ export interface Profile {
   bonus_super_likes: number;
   reveal_until: string | null;
   boosted_until: string | null;
+  suspended_until: string | null;
   gender: Gender;
   interested_in: InterestedIn;
   city: string;

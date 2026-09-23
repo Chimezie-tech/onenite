@@ -169,7 +169,7 @@ export default function ProductDetailPage() {
 
       <button type="button" onClick={() => setEnquiryOpen(true)}
         className="rounded-xl bg-pink-500 py-3 text-sm font-bold text-white">
-        Enquire about this product 💬
+        Enquire about this product
       </button>
 
       {enquiryOpen && (

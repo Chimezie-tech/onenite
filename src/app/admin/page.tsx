@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BarChart3, Menu, Megaphone, ShoppingBag, Star, Users } from "lucide-react";
+import { ArrowLeft, BarChart3, Menu, Megaphone, ShoppingBag, Star, Users, ShieldAlert } from "lucide-react";
 import OverviewSection from "@/components/admin/OverviewSection";
 import UsersSection from "@/components/admin/UsersSection";
 import ProductsSection from "@/components/admin/ProductsSection";
 import AdsSection from "@/components/admin/AdsSection";
 import PricingSection from "@/components/admin/PricingSection";
+import SafetySection from "@/components/admin/SafetySection";
 
 const SECTIONS = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -14,6 +15,7 @@ const SECTIONS = [
   { id: "products", label: "Products", icon: ShoppingBag },
   { id: "ads", label: "Ads", icon: Megaphone },
   { id: "pricing", label: "Pricing & Billing", icon: Star },
+  { id: "safety", label: "Safety & Reports", icon: ShieldAlert },
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]["id"];
@@ -81,6 +83,7 @@ export default function AdminPage() {
           {section === "products" && <ProductsSection />}
           {section === "ads" && <AdsSection />}
           {section === "pricing" && <PricingSection />}
+            {section === "safety" && <SafetySection />}
         </div>
       </div>
     </main>
