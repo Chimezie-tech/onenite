@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Check, Sparkles } from "lucide-react";
+import { Check } from "lucide-react";
 import BackHeader from "@/components/layout/BackHeader";
 import { getSupabase, getToken } from "@/lib/supabase/client";
 import { getTelegramWebApp } from "@/lib/telegram/sdk";
 import { isPremiumActive } from "@/lib/premium";
 import { useUserStore } from "@/store/useUserStore";
-import { PLANS, ONE_TIME_ITEMS, BOOSTS } from "@/lib/utils/constants";
+import { CURRENCY_SYMBOLS, PLANS, ONE_TIME_ITEMS, BOOSTS } from "@/lib/utils/constants";
 
 const FEATURES = [
   "Unlimited likes every day",
@@ -15,20 +15,33 @@ const FEATURES = [
   "Blue premium badge on your profile",
 ];
 
+interface PriceInfo {
+  stars: number;
+  currency: string;
+  payment_link: string | null;
+}
+
 export default function PremiumPage() {
   const { profile, patchProfile } = useUserStore();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [priceMap, setPriceMap] = useState<Record<string, PriceInfo>>({});
   const premium = isPremiumActive(profile);
-  const [priceMap, setPriceMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     void (async () => {
       const res = await fetch("/api/pricing");
       if (!res.ok) return;
-      const rows = (await res.json()) as Array<{ key: string; stars: number }>;
-      const m: Record<string, number> = {};
-      for (const r of rows) m[r.key] = r.stars;
+      const rows = (await res.json()) as Array<{
+        key: string;
+        stars: number;
+        currency: string;
+        payment_link: string | null;
+      }>;
+      const m: Record<string, PriceInfo> = {};
+      for (const r of rows) {
+        m[r.key] = { stars: r.stars, currency: r.currency, payment_link: r.payment_link };
+      }
       setPriceMap(m);
     })();
   }, []);
@@ -36,10 +49,7 @@ export default function PremiumPage() {
   async function refreshProfile() {
     if (!profile) return;
     const { data } = await getSupabase()
-      .from("profiles")
-      .select("*")
-      .eq("id", profile.id)
-      .maybeSingle();
+      .from("profiles").select("*").eq("id", profile.id).maybeSingle();
     if (data) patchProfile(data);
   }
 
@@ -48,8 +58,36 @@ export default function PremiumPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function checkout(body: Record<string, unknown>, busyKey: string) {
+  function infoFor(key: string, fallbackStars: number): PriceInfo {
+    return priceMap[key] ?? { stars: fallbackStars, currency: "stars", payment_link: null };
+  }
+
+  function label(info: PriceInfo): string {
+    if (info.currency === "stars") return `${info.stars} ⭐`;
+    return `${info.stars.toLocaleString()} ${CURRENCY_SYMBOLS[info.currency] ?? info.currency}`;
+  }
+
+  function openExternal(url: string) {
+    const tg = getTelegramWebApp();
+    if (tg) tg.openLink(url);
+    else window.open(url, "_blank", "noopener");
+  }
+
+  async function checkout(body: Record<string, unknown>, busyKey: string, info: PriceInfo) {
     setMessage("");
+
+    // Fiat mode: open the configured PayPal/Flutterwave link
+    if (info.currency !== "stars") {
+      if (!info.payment_link) {
+        setMessage("Payment link not configured for this item yet.");
+        return;
+      }
+      openExternal(info.payment_link);
+      setMessage("Complete your payment in the opened checkout page.");
+      return;
+    }
+
+    // Stars mode: native Telegram invoice
     const tg = getTelegramWebApp();
     if (!tg) {
       setMessage("Open this page inside Telegram to pay.");
@@ -113,14 +151,14 @@ export default function PremiumPage() {
       </ul>
 
       {(Object.keys(PLANS) as Array<"weekly" | "monthly">).map((id) => {
-        const dynamicStars = priceMap[`sub:${id}`] ?? PLANS[id].stars;
+        const info = infoFor(`sub:${id}`, PLANS[id].stars);
         return (
           <div key={id} className="rounded-xl border border-line bg-surface p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-bold capitalize text-ink">{id}</p>
                 <p className="text-xs text-muted">
-                  {dynamicStars} ⭐ ·{" "}
+                  {label(info)} ·{" "}
                   {id === "monthly"
                     ? "renews automatically until cancelled"
                     : "one-time 7-day pass"}
@@ -135,10 +173,16 @@ export default function PremiumPage() {
             <button
               type="button"
               disabled={busy !== null}
-              onClick={() => checkout({ kind: "subscription", plan: id }, `sub:${id}`)}
+              onClick={() =>
+                void checkout({ kind: "subscription", plan: id }, `sub:${id}`, info)
+              }
               className="mt-3 w-full rounded-xl bg-pink-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
             >
-              {busy === `sub:${id}` ? "Opening Telegram…" : `Subscribe — ${dynamicStars} ⭐`}
+              {busy === `sub:${id}`
+                ? "Opening Telegram…"
+                : info.currency === "stars"
+                ? `Subscribe — ${label(info)}`
+                : `Pay — ${label(info)}`}
             </button>
           </div>
         );
@@ -147,7 +191,7 @@ export default function PremiumPage() {
       <h2 className="mt-2 text-sm font-bold text-ink">Impulse Boosts</h2>
 
       {Object.values(BOOSTS).map((b) => {
-        const dynamicStars = priceMap[`boost:${b.id}`] ?? b.stars;
+        const info = infoFor(`boost:${b.id}`, b.stars);
         return (
           <div key={b.id} className="rounded-xl border border-line bg-surface p-4">
             <div className="flex items-center justify-between">
@@ -156,7 +200,7 @@ export default function PremiumPage() {
                 <p className="text-xs text-muted">{b.description}</p>
               </div>
               <span className="rounded-full bg-amber-400/20 px-2.5 py-1 text-xs font-bold text-amber-500">
-                {dynamicStars} ⭐
+                {label(info)}
               </span>
             </div>
             {boostActive && (
@@ -167,21 +211,23 @@ export default function PremiumPage() {
             <button
               type="button"
               disabled={busy !== null || boostActive}
-              onClick={() => checkout({ kind: "boost", boost: b.id }, `boost:${b.id}`)}
+              onClick={() => void checkout({ kind: "boost", boost: b.id }, `boost:${b.id}`, info)}
               className="mt-3 w-full rounded-xl bg-amber-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
             >
               {busy === `boost:${b.id}`
-                ? "Opening Telegram…"
+                ? "Opening…"
                 : boostActive
                 ? "Boost running…"
-                : `Boost me — ${dynamicStars} ⭐`}
+                : info.currency === "stars"
+                ? `Boost me — ${label(info)}`
+                : `Pay — ${label(info)}`}
             </button>
           </div>
         );
       })}
 
       {Object.values(ONE_TIME_ITEMS).map((item) => {
-        const dynamicStars = priceMap[`onetime:${item.id}`] ?? item.stars;
+        const info = infoFor(`onetime:${item.id}`, item.stars);
         return (
           <div key={item.id} className="rounded-xl border border-line bg-surface p-4">
             <div className="flex items-center justify-between">
@@ -190,7 +236,7 @@ export default function PremiumPage() {
                 <p className="text-xs text-muted">{item.description}</p>
               </div>
               <span className="rounded-full bg-pink-500/20 px-2.5 py-1 text-xs font-bold text-pink-500">
-                {dynamicStars} ⭐
+                {label(info)}
               </span>
             </div>
             {item.id === "reveal_who_liked_you" && revealActive && (
@@ -203,11 +249,15 @@ export default function PremiumPage() {
               type="button"
               disabled={busy !== null || (item.id === "reveal_who_liked_you" && revealActive)}
               onClick={() =>
-                checkout({ kind: "onetime", item: item.id }, `onetime:${item.id}`)
+                void checkout({ kind: "onetime", item: item.id }, `onetime:${item.id}`, info)
               }
               className="mt-3 w-full rounded-xl bg-pink-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
             >
-              {busy === `onetime:${item.id}` ? "Opening Telegram…" : `Buy — ${dynamicStars} ⭐`}
+              {busy === `onetime:${item.id}`
+                ? "Opening…"
+                : info.currency === "stars"
+                ? `Buy — ${label(info)}`
+                : `Pay — ${label(info)}`}
             </button>
           </div>
         );
@@ -215,7 +265,7 @@ export default function PremiumPage() {
 
       {message && <p className="text-center text-xs text-ink">{message}</p>}
       <p className="text-center text-[11px] text-muted">
-        Subscriptions are managed by Telegram: Settings → My Payments → cancel anytime.
+        Star subscriptions are managed by Telegram: Settings → My Payments → cancel anytime.
       </p>
     </main>
   );

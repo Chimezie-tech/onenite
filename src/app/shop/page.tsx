@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Link, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
 import { getSupabase } from "@/lib/supabase/client";
-import { getTelegramWebApp } from "@/lib/telegram/sdk";
 import { CURRENCY_SYMBOLS } from "@/lib/utils/constants";
 import type { Product } from "@/types";
 
@@ -11,22 +11,20 @@ export default function ShopPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     async function load() {
       const { data } = await getSupabase()
-        .from("products").select("*")
+        .from("products")
+        .select("*")
         .order("created_at", { ascending: false });
-      setProducts((data ?? []) as Product[]);
+      if (active) setProducts((data ?? []) as Product[]);
       setLoading(false);
     }
-    load();
+    void load();
+    return () => {
+      active = false;
+    };
   }, []);
-
-  function buy(product: Product) {
-    if (!product.cta_url) return;
-    const tg = getTelegramWebApp();
-    if (tg) tg.openLink(product.cta_url);
-    else window.open(product.cta_url, "_blank", "noopener");
-  }
 
   return (
     <main className="mx-auto max-w-md p-4 pb-24">
@@ -39,27 +37,25 @@ export default function ShopPage() {
       ) : products.length === 0 ? (
         <p className="mt-10 text-center text-muted">No products yet. Check back soon!</p>
       ) : (
-        
         <div className="grid grid-cols-2 gap-3">
           {products.map((p) => (
-            <Link key={p.id} href={`/shop/${p.id}`} className="overflow-hidden rounded-xl border border-line bg-surface">
-            <div key={p.id} className="overflow-hidden rounded-xl border border-line bg-surface">
-              <img src={p.image_url} alt={p.name} className="h-32 w-full object-cover" />
+            <Link
+              key={p.id}
+              href={`/shop/${p.id}`}
+              className="overflow-hidden rounded-xl border border-line bg-surface"
+            >
+              <img
+                src={p.thumbnail_url ?? p.image_url}
+                alt={p.name}
+                className="h-32 w-full object-cover"
+              />
               <div className="flex flex-col gap-1 p-3">
                 <p className="truncate text-sm font-semibold text-ink">{p.name}</p>
                 <p className="text-sm font-bold text-pink-500">
-                  {CURRENCY_SYMBOLS[p.currency] ?? p.currency}{p.price}
+                  {CURRENCY_SYMBOLS[p.currency] ?? ""}
+                  {Number(p.price).toLocaleString()}
                 </p>
-                <button
-                  type="button"
-                  disabled={!p.cta_url || p.status !== "active"}
-                  onClick={() => buy(p)}
-                  className="mt-1 rounded-lg bg-pink-500 py-1.5 text-xs font-bold text-white disabled:opacity-40"
-                >
-                  {p.cta_label}
-                </button>
               </div>
-            </div>
             </Link>
           ))}
         </div>
