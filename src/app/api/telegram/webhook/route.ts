@@ -79,7 +79,7 @@ export async function POST(req: Request) {
       .eq("id", profile.id);
     await sendTelegramMessage(
       profile.telegram_id,
-      `⚡ +5 Super Likes added to your account!\nBalance: ${profile.bonus_super_likes + 5} super likes.`,
+      ` +5 Super Likes added to your account!\nBalance: ${profile.bonus_super_likes + 5} super likes.`,
       OPEN_APP_BUTTON
     );
   } else if (kind === "onetime" && id === "reveal_who_liked_you") {
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
       .eq("id", profile.id);
     await sendTelegramMessage(
       profile.telegram_id,
-      `👀 Reveal unlocked for 24 hours!\nOpen the Likes tab to see everyone who likes you.`,
+      ` Reveal unlocked for 24 hours!\nOpen the Likes tab to see everyone who likes you.`,
       OPEN_APP_BUTTON
     );
   } else if (kind === "boost" && id === "boost_30min") {
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
       .eq("id", profile.id);
     await sendTelegramMessage(
       profile.telegram_id,
-      `🚀 Boost active until ${until.toTimeString().slice(0, 5)}!\nYou're now first in the deck in your city.`,
+      ` Boost active until ${until.toTimeString().slice(0, 5)}!\nYou're now first in the deck in your city.`,
       OPEN_APP_BUTTON
     );
   }

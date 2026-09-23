@@ -60,7 +60,7 @@ export default function MatchModal({ match, myPhotoUrl, onClose }: Props) {
               }}
               className="mt-6 w-full rounded-xl bg-pink-500 py-3 font-bold text-white"
             >
-              Say Hello 💬
+              Say Hello
             </button>
             <button
               type="button"

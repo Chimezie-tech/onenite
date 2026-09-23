@@ -4,12 +4,12 @@ export const APP_NAME = "OneNite";
 export const APP_TAGLINE = "Meet amazing people near you 🌍❤️";
 
 // --- Free tier limits ---
-export const FREE_DAILY_LIKES = 10;
-export const FREE_DAILY_SUPER_LIKES = 1;
-export const FREE_DAILY_MESSAGES = 10;
+export const FREE_DAILY_LIKES = 20;
+export const FREE_DAILY_SUPER_LIKES = 5;
+export const FREE_DAILY_MESSAGES = 5;
 
 // --- Premium tier limits ---
-export const PREMIUM_DAILY_SUPER_LIKES = 5;
+export const PREMIUM_DAILY_SUPER_LIKES = 10;
 
 // --- Profile rules ---
 export const MIN_PHOTOS = 1;

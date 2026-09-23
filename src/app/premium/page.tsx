@@ -205,7 +205,7 @@ export default function PremiumPage() {
             </div>
             {boostActive && (
               <p className="mt-2 text-xs font-semibold text-amber-500">
-                🚀 Active until {new Date(profile?.boosted_until ?? "").toTimeString().slice(0, 5)}
+                 Active until {new Date(profile?.boosted_until ?? "").toTimeString().slice(0, 5)}
               </p>
             )}
             <button
@@ -241,7 +241,7 @@ export default function PremiumPage() {
             </div>
             {item.id === "reveal_who_liked_you" && revealActive && (
               <p className="mt-2 text-xs font-semibold text-pink-500">
-                👀 Unlocked until{" "}
+                 Unlocked until{" "}
                 {new Date(profile?.reveal_until ?? "").toTimeString().slice(0, 5)}
               </p>
             )}
