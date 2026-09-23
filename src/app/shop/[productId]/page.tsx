@@ -89,21 +89,19 @@ export default function ProductDetailPage() {
         </p>
       )}
 
-      {product.colors?.length > 0 && (
-        <div>
-          <p className="mb-1 text-xs font-bold uppercase tracking-wide text-muted">Colors</p>
-          <div className="flex gap-2">
-            {product.colors.map((c) => (
-              <span
-                key={c}
-                title={c}
-                className="h-6 w-6 rounded-full border border-line"
-                style={{ backgroundColor: c }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {product.colors.map((c) =>
+              c.startsWith("#") ? (
+                <span key={c} title={c}
+                  className="h-6 w-6 rounded-full border border-line"
+                  style={{ backgroundColor: c }} />
+              ) : (
+                <span key={c}
+                  className="rounded-full border border-line bg-surface px-2.5 py-1 text-[11px] text-ink">
+                  {c}
+                </span>
+              )
+            )}
+            
 
       {product.description && (
         <div>

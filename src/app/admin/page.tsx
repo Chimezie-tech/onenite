@@ -1,15 +1,19 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BarChart3, Menu, Megaphone, Users } from "lucide-react";
+import { ArrowLeft, BarChart3, Menu, Megaphone, ShoppingBag, Star, Users } from "lucide-react";
 import OverviewSection from "@/components/admin/OverviewSection";
 import UsersSection from "@/components/admin/UsersSection";
+import ProductsSection from "@/components/admin/ProductsSection";
 import AdsSection from "@/components/admin/AdsSection";
+import PricingSection from "@/components/admin/PricingSection";
 
 const SECTIONS = [
   { id: "overview", label: "Overview", icon: BarChart3 },
   { id: "users", label: "Users", icon: Users },
-  { id: "ads", label: "Ads & Products", icon: Megaphone },
+  { id: "products", label: "Products", icon: ShoppingBag },
+  { id: "ads", label: "Ads", icon: Megaphone },
+  { id: "pricing", label: "Pricing & Billing", icon: Star },
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]["id"];
@@ -47,12 +51,12 @@ export default function AdminPage() {
         <button type="button" aria-label="Open menu" onClick={() => setDrawerOpen(true)} className="text-ink">
           <Menu className="h-5 w-5" />
         </button>
-        <p className="font-bold text-ink">Admin Console</p>
+        <p className="font-bold text-ink">Admin Console 🛠️</p>
       </header>
 
       <div className="mx-auto flex max-w-6xl">
         <aside className="hidden w-56 shrink-0 border-r border-line bg-surface p-3 md:block">
-          <p className="mb-3 px-3 font-bold text-ink">Admin Console</p>
+          <p className="mb-3 px-3 font-bold text-ink">Admin Console 🛠️</p>
           {nav}
         </aside>
 
@@ -65,7 +69,7 @@ export default function AdminPage() {
               onClick={() => setDrawerOpen(false)}
             />
             <div className="absolute left-0 top-0 h-full w-64 bg-surface p-3">
-              <p className="mb-3 px-3 font-bold text-ink">Admin Console</p>
+              <p className="mb-3 px-3 font-bold text-ink">Admin Console 🛠️</p>
               {nav}
             </div>
           </div>
@@ -74,7 +78,9 @@ export default function AdminPage() {
         <div className="min-w-0 flex-1 p-4">
           {section === "overview" && <OverviewSection />}
           {section === "users" && <UsersSection />}
+          {section === "products" && <ProductsSection />}
           {section === "ads" && <AdsSection />}
+          {section === "pricing" && <PricingSection />}
         </div>
       </div>
     </main>
