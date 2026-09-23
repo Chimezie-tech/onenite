@@ -1,6 +1,7 @@
 export type ProductStatus = "active" | "sold_out" | "archived";
 
 export interface Product {
+  category_id: import("react").JSX.Element;
   id: string;
   name: string;
   description: string | null;
