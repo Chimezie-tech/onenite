@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import AuthGuard from "@/components/layout/AuthGuard";
 
-/** Routes that must be viewable by anyone, outside Telegram, with no auth. */
-const PUBLIC_PREFIXES = ["/landing"];
+/** Routes viewable by anyone, outside Telegram, with no auth. */
+const PUBLIC_PREFIXES = ["/landing", "/ads"];
 
 export default function AppGate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
