@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import ThemeProvider from "@/components/layout/ThemeProvider";
-import AuthGuard from "@/components/layout/AuthGuard";
+import AppGate from "@/components/layout/AppGate";
 import BanGate from "@/components/auth/BanGate";
 import LayoutChrome from "@/components/layout/LayoutChrome";
 
@@ -22,9 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${inter.className} min-h-screen`}>
         <ThemeProvider>
-          <AuthGuard>
+          <AppGate>
             <BanGate>{children}</BanGate>
-          </AuthGuard>
+          </AppGate>
           <LayoutChrome />
         </ThemeProvider>
       </body>
