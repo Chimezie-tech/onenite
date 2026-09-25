@@ -45,12 +45,12 @@ export default function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`flex flex-1 flex-col items-center gap-1 py-1 text-[8px] font-medium ${
+              className={`flex flex-1 flex-col items-center gap-1 py-2 text-[8px] font-medium ${
                 active ? "text-pink-500" : "text-muted"
               }`}
             >
               <span className="relative">
-                <Icon className=" h-[18px] w-[18]" />
+                <Icon className=" h-[20px] w-[20]" />
                 {count > 0 && (
                   <span className="absolute -right-2 -top-1 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-pink-500 px-1 text-[9px] font-bold text-white">
                     {badgeText(count)}
