@@ -1,7 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { MoreVertical, Send } from "lucide-react";
+import { Eye, MoreVertical, Send } from "lucide-react";
 import { getToken } from "@/lib/supabase/client";
+import AdminProfileView from "@/components/admin/AdminProfileView";
 import type { Profile } from "@/types";
 
 interface Filters { q: string; city: string; gender: string; premium: string; status: string; }
@@ -18,8 +19,9 @@ export default function UsersSection() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkMsg, setBulkMsg] = useState("");
   const [bulkResult, setBulkResult] = useState("");
-  const [suspendStart, setSuspendStart] = useState(""); 
+  const [suspendStart, setSuspendStart] = useState("");
   const [suspendEnd, setSuspendEnd] = useState("");
+  const [viewId, setViewId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -133,7 +135,7 @@ export default function UsersSection() {
                     </div>
                   </div>
                 </td>
-                <td className="p-3 text-ink">{u.city}</td>
+                <td className="p-3 text-ink">{u.city || "—"}</td>
                 <td className="p-3">
                   {u.is_premium
                     ? <span className="rounded-full bg-sky-500/15 px-2 py-0.5 font-semibold text-sky-500">Premium</span>
@@ -146,10 +148,16 @@ export default function UsersSection() {
                 </td>
                 <td className="p-3 text-muted">{new Date(u.created_at).toLocaleDateString()}</td>
                 <td className="p-3">
-                  <button type="button" aria-label="Actions" onClick={() => setActive(u)}
-                    className="rounded-lg border border-line p-1.5 text-ink">
-                    <MoreVertical className="h-4 w-4" />
-                  </button>
+                  <div className="flex gap-1">
+                    <button type="button" aria-label="View full profile" onClick={() => setViewId(u.id)}
+                      className="rounded border border-line p-1 text-sky-500">
+                      <Eye className="h-3 w-3" />
+                    </button>
+                    <button type="button" aria-label="Actions" onClick={() => setActive(u)}
+                      className="rounded border border-line p-1 text-ink">
+                      <MoreVertical className="h-3 w-3" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -171,19 +179,29 @@ export default function UsersSection() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-sm rounded-2xl border border-line bg-surface p-4">
             <p className="font-bold text-ink">{active.first_name}, {active.age}</p>
-            <p className="text-xs text-muted">@{active.username ?? active.telegram_id} · {active.city}</p>
+            <p className="text-xs text-muted">@{active.username ?? active.telegram_id} · {active.city || "no city"}</p>
             <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-semibold">
-              <button type="button" onClick={() => void act(active.is_banned ? "unsuspend" : "suspend")}
+              <button type="button" onClick={() => void act(active.is_banned ? "unsuspend" : "suspend", { start: suspendStart || null, end: suspendEnd || null })}
                 className="rounded-lg bg-amber-500 py-2 text-white">
                 {active.is_banned ? "Unsuspend" : "Suspend"}
               </button>
+              <button type="button" onClick={() => void act("activate")}
+                className="rounded-lg bg-emerald-500 py-2 text-white">Activate</button>
               <button type="button" onClick={() => void act("upgrade")}
                 className="rounded-lg bg-sky-500 py-2 text-white">Upgrade +30d</button>
               <button type="button"
                 onClick={() => { if (window.confirm(`Permanently delete ${active.first_name}?`)) void act("delete"); }}
                 className="rounded-lg bg-red-500 py-2 text-white">Delete</button>
               <button type="button" onClick={() => setActive(null)}
-                className="rounded-lg border border-line py-2 text-ink">Close</button>
+                className="col-span-2 rounded-lg border border-line py-2 text-ink">Close</button>
+            </div>
+            <div className="mt-2 flex gap-2 text-[11px] text-muted">
+              <label className="flex-1">Start date
+                <input type="date" className={`${INPUT} mt-1 w-full`} value={suspendStart} onChange={(e) => setSuspendStart(e.target.value)} />
+              </label>
+              <label className="flex-1">End (blank = permanent)
+                <input type="date" className={`${INPUT} mt-1 w-full`} value={suspendEnd} onChange={(e) => setSuspendEnd(e.target.value)} />
+              </label>
             </div>
             <div className="mt-3 flex flex-col gap-2">
               <EditRow label="Name" initial={active.first_name} onSave={(v) => void act("edit", { first_name: v })} />
@@ -216,6 +234,8 @@ export default function UsersSection() {
           </div>
         </div>
       )}
+
+      {viewId && <AdminProfileView userId={viewId} onClose={() => setViewId(null)} />}
     </div>
   );
 }

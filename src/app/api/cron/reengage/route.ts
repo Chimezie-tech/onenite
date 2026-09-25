@@ -9,6 +9,25 @@ export async function GET(req: Request) {
   }
 
   const admin = getSupabaseAdmin();
+
+  // 1) Rescue nudge: signed up 24h+ ago but never finished onboarding
+  const { data: incomplete } = await admin
+    .from("profiles").select("id, telegram_id, first_name")
+    .eq("onboarding_completed", false)
+    .is("signup_nudged_at", null)
+    .lt("created_at", new Date(Date.now() - 24 * 3600000).toISOString())
+    .limit(50);
+
+  for (const u of incomplete ?? []) {
+    await sendTelegramMessage(
+      u.telegram_id,
+      `Hey ${u.first_name}! 👋 You're 30 seconds from matching on OneNite — add your city + 1 photo to unlock your deck.`,
+      OPEN_APP_BUTTON
+    );
+    await admin.from("profiles").update({ signup_nudged_at: new Date().toISOString() }).eq("id", u.id);
+  }
+
+  // 2) Dormant-user re-engagement (72h absence + unseen likes)
   const limit = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
   const lastSentLimit = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -20,13 +39,10 @@ export async function GET(req: Request) {
     .eq("onboarding_completed", true)
     .limit(50);
 
-  if (!dormant || dormant.length === 0) return NextResponse.json({ ok: true, processed: 0 });
-
-  for (const user of dormant) {
+  for (const user of dormant ?? []) {
     const { count } = await admin
       .from("likes").select("*", { count: "exact", head: true })
-      .eq("to_user_id", user.id)
-      .eq("is_pass", false)
+      .eq("to_user_id", user.id).eq("is_pass", false)
       .gt("created_at", user.last_active_at);
 
     if (count && count > 0) {
@@ -35,11 +51,9 @@ export async function GET(req: Request) {
         `💗 ${count} ${count === 1 ? "person" : "people"} liked you while you were away!\nOpen OneNite to see who.`,
         OPEN_APP_BUTTON
       );
-      await admin.from("profiles")
-        .update({ last_reengaged_at: new Date().toISOString() })
-        .eq("id", user.id);
+      await admin.from("profiles").update({ last_reengaged_at: new Date().toISOString() }).eq("id", user.id);
     }
   }
 
-  return NextResponse.json({ ok: true, processed: dormant.length });
+  return NextResponse.json({ ok: true, nudged: (incomplete ?? []).length, processed: (dormant ?? []).length });
 }

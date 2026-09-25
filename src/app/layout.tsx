@@ -6,6 +6,7 @@ import ThemeProvider from "@/components/layout/ThemeProvider";
 import AppGate from "@/components/layout/AppGate";
 import BanGate from "@/components/auth/BanGate";
 import LayoutChrome from "@/components/layout/LayoutChrome";
+import CityGate from "@/components/layout/CityGate";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${inter.className} min-h-screen`}>
         <ThemeProvider>
+          <CityGate />
           <AppGate>
             <BanGate>{children}</BanGate>
           </AppGate>
