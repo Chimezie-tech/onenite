@@ -1,47 +1,45 @@
 "use client";
 import { useState } from "react";
 import { Send } from "lucide-react";
-import { MESSAGE_MAX_LENGTH } from "@/lib/utils/constants";
 
 interface Props {
-  onSend: (content: string) => void;
+  onSend: (content: string) => void | Promise<void>;
   onTyping: () => void;
 }
 
 export default function ChatInput({ onSend, onTyping }: Props) {
   const [value, setValue] = useState("");
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
+  function submit() {
     const text = value.trim();
     if (!text) return;
-    onSend(text);
     setValue("");
+    void onSend(text);
   }
 
   return (
-    <form
-      onSubmit={submit}
-      className="sticky bottom-0 flex items-center gap-2 border-t border-line bg-surface p-3"
-    >
+    <div className="sticky bottom-0 z-10 flex items-center gap-2 border-t border-line bg-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
       <input
+        className="flex-1 rounded-full border border-line bg-field px-4 py-2.5 text-sm text-ink outline-none placeholder:text-muted"
+        placeholder="Message…"
         value={value}
         onChange={(e) => {
           setValue(e.target.value);
           onTyping();
         }}
-        maxLength={MESSAGE_MAX_LENGTH}
-        placeholder="Type a message…"
-        className="flex-1 rounded-xl border border-line bg-field px-3 py-2 text-sm text-ink outline-none"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") submit();
+        }}
       />
       <button
-        type="submit"
+        type="button"
         aria-label="Send"
+        onClick={submit}
         disabled={!value.trim()}
-        className="rounded-xl bg-pink-500 p-2.5 text-white disabled:opacity-40"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pink-500 text-white shadow-lg shadow-pink-500/30 disabled:opacity-40"
       >
         <Send className="h-4 w-4" />
       </button>
-    </form>
+    </div>
   );
 }
